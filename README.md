@@ -69,5 +69,5 @@ Når `core_pipeline.py` kjører, oppretter den en lokal webserver. Koble mobilte
 
 ## Kjente Begrensninger og Løsninger
 - **"Gummistrikk-effekt" på lyden:** Hvis tolken velger mange språk (3+) og skjermkortet er for svakt, vil TTS-køen vokse. Systemet er programmert med en "dynamisk gasspedal" som skrur opp lesehastigheten inntil 1.5x, men ved for svak hardware vil det henge bak. Gå inn i Admin-panelet og reduser antall kanaler til GPUen byttes.
-- **Feil oversettelse av kirkelige ord:** Rediger filen `oversettelse_ordliste.json`. Systemet bruker "Named Entity Masking" som midlertidig bytter ut ordet ditt med en hemmelig kode (f.eks M9901) for å forhindre at AI'en (NLLB) oversetter det feil.
-- **Feil uttale:** Rediger filen `uttale_ordliste.json`. Her kan du skrive fonetiske omkodinger (f.eks "Herren": "Hærren") som gjelder KUN for opplesing (skjermen tekstes normalt).
+- **Feil oversettelse av kirkelige ord:** Rediger filen `oversettelse_ordliste.json` (eller gjør det direkte i Admin-panelet). Systemet bruker "Named Entity Masking" som midlertidig bytter ut ordet ditt med en hemmelig kode (f.eks M9901) for å forhindre at AI'en (NLLB) oversetter det feil.
+- **Feil uttale:** Gå til Admin-panelet under **«Fonetisk Uttale»** (eller rediger filen `uttale_ordliste.json`). Her kan du legge inn fonetiske omkodinger (f.eks "Herren": "Hærren") som gjelder KUN for opplesing (skjermen tekstes normalt).

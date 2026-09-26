@@ -1432,6 +1432,40 @@ class AudioPipeline:
             print(f"[System] Feil ved oppdatering av ordliste: {e}")
             return web.json_response({"error": str(e)}, status=500, headers=self._API_HEADERS)
 
+    async def api_get_pronunciation_handler(self, request):
+        """REST API (Admin): Henter gjeldende uttale_ordliste.json"""
+        import json
+        try:
+            if not os.path.exists("uttale_ordliste.json"):
+                self.uttale_ordliste = {"Herren": "Hærren"}
+                with open("uttale_ordliste.json", "w", encoding="utf-8") as f:
+                    json.dump(self.uttale_ordliste, f, indent=2, ensure_ascii=False)
+            with open("uttale_ordliste.json", "r", encoding="utf-8") as f:
+                data = json.load(f)
+            self.uttale_ordliste = data
+            return web.json_response(data, headers=self._API_HEADERS)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500, headers=self._API_HEADERS)
+
+    async def api_update_pronunciation_handler(self, request):
+        """REST API (Admin): Oppdaterer uttale_ordliste.json og laster den inn på nytt"""
+        import json
+        try:
+            data = await request.json()
+            if not isinstance(data, dict):
+                return web.json_response({"error": "Ugyldig format. Forventet JSON-objekt."}, status=400, headers=self._API_HEADERS)
+            
+            with open("uttale_ordliste.json", "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+            
+            self.uttale_ordliste = data
+            print(f"[System] Uttale-ordliste oppdatert via Admin ({len(data)} ord)")
+            
+            return web.json_response({"status": "ok", "message": "Uttale-ordliste oppdatert", "count": len(data)}, headers=self._API_HEADERS)
+        except Exception as e:
+            print(f"[System] Feil ved oppdatering av uttale-ordliste: {e}")
+            return web.json_response({"error": str(e)}, status=500, headers=self._API_HEADERS)
+
     async def api_start_mixer_recording_handler(self, request):
         """REST API (Admin): Starter opptak av stemmeprøve fra miksebord / mikrofon."""
         if os.path.exists(self.last_recorded_sample_path):
@@ -1840,6 +1874,8 @@ class AudioPipeline:
         app.router.add_get('/api/admin/mic_level', self.api_mic_level_handler)
         app.router.add_get('/api/admin/dictionary', self.api_get_dictionary_handler)
         app.router.add_post('/api/admin/dictionary', self.api_update_dictionary_handler)
+        app.router.add_get('/api/admin/pronunciation', self.api_get_pronunciation_handler)
+        app.router.add_post('/api/admin/pronunciation', self.api_update_pronunciation_handler)
 
         # Flerspors Lydopptak (Tale og Tolk)
         app.router.add_post('/api/recording/start', self.api_start_multitrack_recording_handler)
