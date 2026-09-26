@@ -16,6 +16,7 @@ Avhengig av hvor mange språk du ønsker å tolke til **samtidig**:
 ### 2. Annet
 - **Prosessor (CPU):** Valgfri, men en moderne Intel Core i5/i7 eller AMD Ryzen 5/7 er anbefalt for å håndtere Python-tråder.
 - **Minne (RAM):** 32 GB RAM (for å laste modellene inn fra disk før de flyttes til VRAM).
+- **Minnepenn (USB):** Minst **8 GB** (til installasjon av operativsystemet).
 ## Installasjon for Ikke-Tekniske Brukere (Automagisk oppsett på Headless Linux)
 
 For å sikre at tolkemaskinen fungerer som en 100% stabil "appliance" (som en ruter) uten tvungne oppdateringer, mus eller tastatur, anbefales en **headless Linux-installasjon**.
@@ -26,7 +27,7 @@ For å sikre at tolkemaskinen fungerer som en 100% stabil "appliance" (som en ru
 Etter at du har kjøpt en passende PC (med et RTX 3060 eller bedre skjermkort), gjør du følgende:
 
 1. **Lag Installasjons-minnepenn (Steg 1):** 
-   Pakk ut den lille zip-filen på din vanlige Windows-PC eller Mac. Sett inn en tom minnepenn i maskinen, og kjør:
+   Pakk ut den lille zip-filen på din vanlige Windows-PC eller Mac. Sett inn en tom minnepenn på **minst 8 GB** i maskinen (Ubuntu tar ca. 5.7 GB, så 4 GB blir for lite), og kjør:
    - For **Windows**: Dobbeltklikk på `Lag_Ubuntu_USB.bat`
    - For **Mac**: Dobbeltklikk på `Lag_Ubuntu_USB.command`
    

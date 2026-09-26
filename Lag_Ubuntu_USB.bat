@@ -8,7 +8,8 @@ echo Dette programmet vil nå automatisk laste ned den
 echo ENESTE riktige versjonen av Ubuntu (24.04 LTS) som 
 echo garantert fungerer med tolkemotoren.
 echo.
-echo Vennligst sett inn en tom minnepenn i denne PCen nå.
+echo Vennligst sett inn en tom minnepenn (MINST 8 GB) i denne PCen nå.
+echo (Ubuntu tar ca. 5.7 GB, så 4 GB minnepenner er for små).
 echo Trykk en tast når minnepennen er satt inn...
 pause >nul
 
