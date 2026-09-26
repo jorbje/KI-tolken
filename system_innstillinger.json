@@ -2,6 +2,7 @@
   "active_tts_channels": 2,
   "source": "no",
   "texting": "no",
+  "nllb_model_setting": "auto",
   "tts_ch1": "en",
   "tts_ch2": "off",
   "tts_ch3": "off",

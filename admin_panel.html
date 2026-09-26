@@ -1039,27 +1039,57 @@
 
             <!-- Kolonne 2: Systemstatus & Arkitektur -->
             <div class="tab-col">
-                <h2>⚡ Maskinvarestatus og Spesifikasjoner</h2>
-                <div style="background-color: #252525; border: 1px solid #333; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                <h2>⚡ Maskinvare og KI-Modeller</h2>
+                <div style="background-color: #252525; border: 1px solid #333; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 14px;">
                     <div>
-                        <div style="font-weight: bold; color: #81c784; margin-bottom: 4px;">🎮 GPU & VRAM (NVIDIA RTX 3060 / 12GB):</div>
-                        <div style="font-size: 0.88rem; color: #ccc; line-height: 1.4;">
-                            • <strong>NLLB-200 Oversetter:</strong> Kjører i <code>float16</code> (~2.6 GB VRAM).<br>
-                            • <strong>Faster-Whisper:</strong> Kjører i <code>int8_float16</code> (~1.5 GB VRAM).<br>
-                            • <strong>OmniVoice TTS:</strong> Zero-shot lokal motor (~3.0 GB VRAM).<br>
-                            • <em>Totalt VRAM-forbruk: ~7.1 GB (god margin under 12 GB-grensen).</em>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span style="font-weight: bold; color: #81c784; font-size: 0.95rem;">🎮 Skjermkort (GPU):</span>
+                            <span id="hwProfileBadge" style="background: #1b5e20; color: #a5d6a7; padding: 2px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: bold;">Detekterer...</span>
+                        </div>
+                        <div style="font-size: 0.9rem; color: #fff; font-weight: 500;" id="hwGpuDetails">
+                            Søker etter installert GPU...
                         </div>
                     </div>
+
+                    <div style="border-top: 1px solid #333; padding-top: 10px;">
+                        <label for="nllbModelSelect" style="display: block; font-weight: bold; color: #90caf9; margin-bottom: 6px; font-size: 0.88rem;">
+                            🧠 Oversettelsesmodell (NLLB-200):
+                        </label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <select id="nllbModelSelect" onchange="onModelSettingChange()" style="flex: 1; padding: 7px 10px; background: #1a1a1a; color: #fff; border: 1px solid #444; border-radius: 4px; font-size: 0.86rem;">
+                                <option value="auto">Auto-detekter (Anbefalt ut fra VRAM)</option>
+                                <option value="3.3B">NLLB-200 3.3B (Høyeste kvalitet – krever 15GB+ VRAM)</option>
+                                <option value="1.3B">NLLB-200 1.3B (Standard – optimal for 12GB VRAM)</option>
+                                <option value="600M">NLLB-200 600M (Kompakt – lav VRAM)</option>
+                            </select>
+                            <button id="saveModelBtn" onclick="saveModelSelection()" class="btn btn-primary" style="display: none; padding: 7px 12px; font-size: 0.82rem;">Lagre</button>
+                        </div>
+                        <div id="modelRestartNotice" style="display: none; margin-top: 8px; font-size: 0.82rem; color: #ffb74d; background: #2a1f0a; border: 1px solid #ffb74d44; padding: 8px; border-radius: 4px;">
+                            ⚠️ <strong>Ny modell lagret:</strong> Krever en omstart av tolkemotoren for å laste inn den nye modellen i VRAM.
+                            <button onclick="triggerAdminRestart()" style="margin-left: 8px; background: #f57c00; color: #fff; border: none; border-radius: 4px; padding: 4px 10px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">Start på nytt nå</button>
+                        </div>
+                    </div>
+
+                    <div style="border-top: 1px solid #333; padding-top: 10px;">
+                        <div style="font-weight: bold; color: #aaa; margin-bottom: 6px; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px;">Aktiv ressursfordeling i minnet:</div>
+                        <div style="font-size: 0.84rem; color: #ccc; line-height: 1.5;">
+                            • <strong>Oversetter (NMT):</strong> <code id="hwActiveNllbText" style="color: #64b5f6;">Laster...</code><br>
+                            • <strong>Transkribering (ASR):</strong> Faster-Whisper Large (<code id="hwWhisperComputeText" style="color: #81c784;">int8_float16</code>)<br>
+                            • <strong>Talesyntese (TTS):</strong> OmniVoice Zero-shot (float16)
+                        </div>
+                    </div>
+
                     <div style="border-top: 1px solid #333; padding-top: 10px;">
                         <div style="font-weight: bold; color: #64b5f6; margin-bottom: 4px;">🎙️ USB Lydkort & Miksebord:</div>
-                        <div style="font-size: 0.88rem; color: #ccc; line-height: 1.4;">
+                        <div style="font-size: 0.85rem; color: #ccc; line-height: 1.4;">
                             • Inngang: Mikrofon/miksebord-signal via Audient iD4 (48 kHz mono PCM).<br>
                             • Utganger: Dynamisk kanalruting til separate tolkesendere (1–16 kanaler).
                         </div>
                     </div>
+
                     <div style="border-top: 1px solid #333; padding-top: 10px;">
                         <div style="font-weight: bold; color: #ffb74d; margin-bottom: 4px;">🚀 Ekstrem lav forsinkelse (Low-Latency):</div>
-                        <div style="font-size: 0.88rem; color: #ccc; line-height: 1.4;">
+                        <div style="font-size: 0.85rem; color: #ccc; line-height: 1.4;">
                             • Dynamisk gasspedal (opptil 1.50x hastighet) hindrer gummistrikk-effekt på lyd.<br>
                             • WebSocket-push gir umiddelbar visning av undertekster på skjerm.
                         </div>
@@ -1333,6 +1363,32 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
                 }
                 checkWarning();
 
+                // Håndter GPU og maskinvareprofil
+                if (config.gpu_name) {
+                    const gpuElem = document.getElementById('hwGpuDetails');
+                    if (gpuElem) {
+                        gpuElem.textContent = `${config.gpu_name} (${config.vram_gb || 0} GB VRAM)`;
+                    }
+                }
+                if (config.hardware_profile) {
+                    const badge = document.getElementById('hwProfileBadge');
+                    if (badge) badge.textContent = config.hardware_profile;
+                }
+                if (config.active_nllb_model) {
+                    const activeNllb = document.getElementById('hwActiveNllbText');
+                    if (activeNllb) activeNllb.textContent = config.active_nllb_model;
+                }
+                if (config.whisper_compute_type) {
+                    const activeCompute = document.getElementById('hwWhisperComputeText');
+                    if (activeCompute) activeCompute.textContent = config.whisper_compute_type;
+                }
+                if (config.nllb_model_setting) {
+                    const sel = document.getElementById('nllbModelSelect');
+                    if (sel && document.activeElement !== sel && !sel.dataset.userEditing) {
+                        sel.value = config.nllb_model_setting;
+                    }
+                }
+
                 // Håndter støttede Hugging Face språk
                 if (config.hf_supported_languages) {
                     hfSupported = config.hf_supported_languages;
@@ -1350,6 +1406,55 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
             } catch (e) {
                 console.error("Klarte ikke hente status fra server:", e);
             }
+        }
+
+        function onModelSettingChange() {
+            const btn = document.getElementById('saveModelBtn');
+            if (btn) btn.style.display = 'inline-block';
+            const sel = document.getElementById('nllbModelSelect');
+            if (sel) sel.dataset.userEditing = 'true';
+        }
+
+        async function saveModelSelection() {
+            const sel = document.getElementById('nllbModelSelect');
+            const val = sel.value;
+            const btn = document.getElementById('saveModelBtn');
+            btn.disabled = true;
+            btn.textContent = "Lagrer...";
+            try {
+                const res = await fetch(`${apiBase()}/api/admin/set_model`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nllb_model_setting: val })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    btn.style.display = 'none';
+                    document.getElementById('modelRestartNotice').style.display = 'block';
+                    delete sel.dataset.userEditing;
+                    fetchHwStatus();
+                } else {
+                    alert("Kunne ikke lagre modellinnstilling: " + (data.error || "Ukjent feil"));
+                }
+            } catch (e) {
+                alert("Feil ved lagring: " + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Lagre";
+            }
+        }
+
+        function triggerAdminRestart() {
+            if (!confirm("Vil du starte tolkemotoren på nytt nå for å laste inn ny modell i VRAM?")) return;
+            const iframe = document.createElement('iframe');
+            iframe.style.cssText = 'position:absolute;width:0;height:0;border:0;visibility:hidden';
+            iframe.src = `${apiBase()}/api/restart?_=${Date.now()}`;
+            document.body.appendChild(iframe);
+            alert("Omstart er igangsatt! Systemet laster inn nye modeller om et øyeblikk...");
+            setTimeout(() => {
+                try { iframe.remove(); } catch (e) {}
+                location.reload();
+            }, 6000);
         }
 
         function renderLanguageList(languages, voices) {

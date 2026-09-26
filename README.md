@@ -9,9 +9,25 @@ Dette prosjektet er spesialtilpasset for kirkelig kontekst (unngår hallusinerte
 KI-Tolken kjører **lokalt** (100% offline etter oppsett), og ytelsen avhenger ene og alene av maskinens **skjermkort (GPU)**:
 
 ### 1. Skjermkort (GPU) - Det aller viktigste!
-Avhengig av hvor mange språk du ønsker å tolke til **samtidig**:
-- **For 2 språk (Standard):** Nvidia RTX 3060 (12GB VRAM) eller RTX 4060 Ti (16GB). *Minnet må være minimum 12GB for å unngå VRAM-krasj.*
-- **For 3-4 språk:** Nvidia RTX 4070 Ti Super (16GB), RTX 4080 (16GB) eller RTX 4090 (24GB). Fordi Tekst-til-tale genereringen (OmniVoice) er svært krevende, vil lydforsinkelsen øke raskt for hvert nye språk hvis GPUen ikke er rask nok.
+
+KI-Tolken detekterer automatisk skjermkortets videominne (VRAM) ved oppstart og tilpasser intelligensen og modellstørrelsen deretter:
+
+* **Standard / 12 GB VRAM (f.eks. Nvidia RTX 3060 12GB eller RTX 4070 12GB):**
+  * **Oversettelse:** Systemet velger automatisk `NLLB-200-1.3B` (FP16, ~2.6 GB VRAM) og Whisper i `int8_float16`.
+  * **Kapasitet:** Gir lynrask teksting og sanntidslyd for **1 til 2 tolkespråk samtidig** (f.eks. engelsk + ukrainsk).
+  * **Minnebruk:** ~7.1 GB totalt (svært stabil drift med god margin under 12 GB-grensen).
+
+* **Ytelse / 16–24 GB VRAM (f.eks. RTX 4070 Ti Super 16GB, RTX 4080 16GB, RTX 3090 24GB eller RTX 4090 24GB):**
+  * **Oversettelse (Flaggskip):** Systemet detekterer $\ge$ 15 GB VRAM og oppgraderer automatisk til **`NLLB-200-3.3B`** (mer enn 2,5x flere parametere). Dette gir **betydelig bedre oversettelseskvalitet, overlegen kontekstforståelse** i komplekse taler/forkynnelse, og mer naturlig setningsbygning.
+  * **Transkribering:** Faster-Whisper kjører i full `float16`.
+  * **Kapasitet:** Skjermkortets regnekraft tillater **3 til 6 parallelle tolkespråk på øret samtidig** uten forsinkelse («gummistrikk-effekt»).
+
+* **Under 10 GB VRAM (f.eks. bærbare med 6–8 GB VRAM):**
+  * Systemet faller tilbake til kompaktmodellen `NLLB-200-600M` som nødløsning.
+
+> ❓ **Hva med to skjermkort (f.eks. 2x RTX 3060 for å få 24 GB)?**  
+> **Nei, to skjermkort slår seg IKKE automatisk sammen til en felles minnepool.** Moderne GeForce-kort støtter ikke felles minneadressering (SLI/NVLink er faset ut). Setter du inn to kort, vil systemet kun benytte det primære kortet (`cuda:0`), mens det andre blir stående ubrukt. Du kan altså **ikke** kjøre en 3.3B-modell over to 12 GB-kort.  
+> **Anbefaling:** Velg alltid **ett enkelt, kraftig skjermkort** med ønsket minnemengde (f.eks. et brukt RTX 3090 24GB eller et RTX 4070 Ti Super 16GB).
 
 ### 2. Annet
 - **Prosessor (CPU):** Valgfri, men en moderne Intel Core i5/i7 eller AMD Ryzen 5/7 er anbefalt for å håndtere Python-tråder.

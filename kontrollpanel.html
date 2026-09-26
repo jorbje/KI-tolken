@@ -529,7 +529,8 @@
                     sysBox.className = "dashboard-box status-ready";
                     sysIcon.textContent = "🟢";
                     sysTitle.textContent = "Tolkemotoren er klar";
-                    sysDesc.textContent = "Alle KI-modeller er lastet inn i GPU (RTX 3060).";
+                    const gpuLabel = config.gpu_name ? config.gpu_name.replace('NVIDIA GeForce ', '') : 'GPU';
+                    sysDesc.textContent = `Alle KI-modeller er lastet inn i GPU (${gpuLabel}).`;
                     sysTech.style.display = "none";
                     sysActions.style.display = "none";
                 }

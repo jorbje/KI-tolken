@@ -386,7 +386,15 @@ class AudioPipeline:
 
         self.nllb_langs = {k: v["nllb"] for k, v in self.languages.items() if "nllb" in v}
         
-        # Gjenopprett huskede brukerinnstillinger (tolkespråk, talerspråk, kanaler)
+        # Undersøk maskinvare (GPU, VRAM) og etabler maskinvareprofil
+        self.hw_info = self.detect_hardware()
+        self.config["gpu_name"] = self.hw_info["gpu_name"]
+        self.config["vram_gb"] = self.hw_info["vram_gb"]
+        self.config["hardware_profile"] = self.hw_info["profile_name"]
+        self.config["nllb_model_setting"] = "auto"
+        self.resolve_model_profile()
+        
+        # Gjenopprett huskede brukerinnstillinger (tolkespråk, talerspråk, kanaler, modellvalg)
         self.load_settings()
         
         # Tilstand for tolkemodeller (lastes asynkront etter at webserveren er oppe)
@@ -552,6 +560,64 @@ class AudioPipeline:
         # 5. Siste nødutgang
         return list(self.languages.keys())[0] if self.languages else "en"
 
+    def detect_hardware(self):
+        """Undersøker installert GPU og VRAM for å bestemme optimal modellprofil."""
+        gpu_name = "Ukjent GPU / CPU"
+        vram_gb = 0.0
+        try:
+            if torch.cuda.is_available():
+                gpu_name = torch.cuda.get_device_name(0)
+                props = torch.cuda.get_device_properties(0)
+                vram_gb = round(props.total_memory / (1024 ** 3), 1)
+        except Exception as e:
+            print(f"[System] Feil under maskinvaredeteksjon: {e}")
+
+        # Anbefalt profil basert på VRAM:
+        # >= 14.5 GB (f.eks. RTX 3090, 4080, 4090 - 16GB / 24GB): NLLB 3.3B + float16
+        # 8.5 GB - 14.4 GB (f.eks. RTX 3060, 4070 - 12GB): NLLB 1.3B + int8_float16
+        # < 8.5 GB (f.eks. 6GB / 8GB): NLLB 600M + int8_float16
+        if vram_gb >= 14.5:
+            recommended_model = "facebook/nllb-200-3.3B"
+            recommended_compute = "float16"
+            profile_name = f"Ytelse ({vram_gb} GB - NLLB 3.3B)"
+        elif vram_gb >= 8.5:
+            recommended_model = "facebook/nllb-200-1.3B"
+            recommended_compute = "int8_float16"
+            profile_name = f"Standard ({vram_gb} GB - NLLB 1.3B)"
+        else:
+            recommended_model = "facebook/nllb-200-distilled-600M"
+            recommended_compute = "int8_float16"
+            profile_name = f"Kompakt ({vram_gb} GB - NLLB 600M)"
+
+        return {
+            "gpu_name": gpu_name,
+            "vram_gb": vram_gb,
+            "recommended_model": recommended_model,
+            "recommended_compute": recommended_compute,
+            "profile_name": profile_name
+        }
+
+    def resolve_model_profile(self):
+        """Avgjør hvilken NLLB-modell og Whisper-presisjon som skal brukes ut fra brukerinnstilling og maskinvare."""
+        setting = self.config.get("nllb_model_setting", "auto")
+        hw = getattr(self, "hw_info", None) or self.detect_hardware()
+        if setting == "3.3B":
+            model = "facebook/nllb-200-3.3B"
+            compute = "float16"
+        elif setting == "1.3B":
+            model = "facebook/nllb-200-1.3B"
+            compute = "int8_float16"
+        elif setting == "600M":
+            model = "facebook/nllb-200-distilled-600M"
+            compute = "int8_float16"
+        else:  # "auto"
+            model = hw["recommended_model"]
+            compute = hw["recommended_compute"]
+
+        self.config["active_nllb_model"] = model
+        self.config["whisper_compute_type"] = compute
+        return model, compute
+
     def load_settings(self):
         """Laster inn lagrede brukerinnstillinger (tolkespråk, talerspråk, kanaler) fra disk."""
         if not os.path.exists(self.settings_file):
@@ -607,11 +673,18 @@ class AudioPipeline:
                     else:
                         self.config[k] = "off"
 
+            # Modellinnstilling for oversettelse (NLLB-200)
+            if "nllb_model_setting" in saved and isinstance(saved["nllb_model_setting"], str):
+                val = saved["nllb_model_setting"].strip()
+                if val in ["auto", "3.3B", "1.3B", "600M"]:
+                    self.config["nllb_model_setting"] = val
+            self.resolve_model_profile()
+
             if needs_resave:
                 self.save_settings()
 
             active_summary = [f"Kanal {i}: {self.config[f'tts_ch{i}']}" for i in range(1, self.config['active_tts_channels'] + 1)]
-            print(f"[System] Husket innstillinger fra forrige økt: Talerspråk={self.config['source']}, Teksting={self.config['texting']}, Aktive kanaler={self.config['active_tts_channels']} ({', '.join(active_summary)})")
+            print(f"[System] Husket innstillinger fra forrige økt: Talerspråk={self.config['source']}, Teksting={self.config['texting']}, Aktive kanaler={self.config['active_tts_channels']} ({', '.join(active_summary)}), NLLB-modell={self.config.get('active_nllb_model')}")
         except Exception as e:
             print(f"[System] Feil ved innlasting av system_innstillinger.json: {e}")
 
@@ -622,6 +695,7 @@ class AudioPipeline:
                 "active_tts_channels": self.config.get("active_tts_channels", 2),
                 "source": self.config.get("source", "no"),
                 "texting": self.config.get("texting", "no"),
+                "nllb_model_setting": self.config.get("nllb_model_setting", "auto"),
             }
             for i in range(1, 17):
                 data[f"tts_ch{i}"] = self.config.get(f"tts_ch{i}", "off")
@@ -686,7 +760,7 @@ class AudioPipeline:
             self.set_system_error(
                 error_type="cuda",
                 title="Skjermkortet (GPU) eller KI-driveren svarer ikke",
-                detail="NVIDIA GeForce RTX 3060 ble ikke funnet eller CUDA-driveren sviktet (DKMS-desynk). Sjekk PCIe-strømkabel eller restart maskinen."
+                detail=f"NVIDIA GPU ({self.config.get('gpu_name', 'NVIDIA')}) ble ikke funnet eller CUDA-driveren sviktet (DKMS-desynk). Sjekk PCIe-strømkabel eller restart maskinen."
             )
             return
 
@@ -729,17 +803,20 @@ class AudioPipeline:
 
         # 5. Last inn NLLB, Whisper og OmniVoice
         try:
-            print("[System] Laster inn NLLB-200 1.3B (Alltid aktiv)...")
+            nllb_model_id = self.config.get("active_nllb_model", "facebook/nllb-200-1.3B")
+            whisper_compute = self.config.get("whisper_compute_type", "int8_float16")
+            gpu_display = f"{self.config.get('gpu_name', 'GPU')} ({self.config.get('vram_gb', 0)} GB VRAM)"
+            print(f"[System] Laster inn NLLB-200 ({nllb_model_id}) for {gpu_display}...")
             self.nllb_model = await asyncio.to_thread(
-                lambda: AutoModelForSeq2SeqLM.from_pretrained("facebook/nllb-200-1.3B", torch_dtype=torch.float16).to("cuda")
+                lambda: AutoModelForSeq2SeqLM.from_pretrained(nllb_model_id, torch_dtype=torch.float16).to("cuda")
             )
             self.nllb_tokenizer = await asyncio.to_thread(
-                lambda: AutoTokenizer.from_pretrained("facebook/nllb-200-1.3B", src_lang=self.nllb_langs[self.config["source"]])
+                lambda: AutoTokenizer.from_pretrained(nllb_model_id, src_lang=self.nllb_langs[self.config["source"]])
             )
 
-            print("[System] Laster inn initiell Whisper-modell...")
+            print(f"[System] Laster inn initiell Whisper-modell med compute_type='{whisper_compute}'...")
             self.whisper = await asyncio.to_thread(
-                lambda: WhisperModel(self.whisper_models[self.config["source"]], device="cuda", compute_type="int8_float16")
+                lambda: WhisperModel(self.whisper_models[self.config["source"]], device="cuda", compute_type=whisper_compute)
             )
 
             print("[System] Laster inn OmniVoice (Universell TTS)...")
@@ -794,8 +871,9 @@ class AudioPipeline:
                 # Tvungen pause slik at GPU-en rekker å fysisk frigjøre minnet før vi laster inn neste
                 await asyncio.sleep(1)
                 
-                print(f"[ModelManager] Laster inn ny Whisper ({ny_modell_navn})...")
-                self.whisper = await asyncio.to_thread(WhisperModel, ny_modell_navn, device="cuda", compute_type="int8_float16")
+                whisper_compute = self.config.get("whisper_compute_type", "int8_float16")
+                print(f"[ModelManager] Laster inn ny Whisper ({ny_modell_navn}) med compute_type='{whisper_compute}'...")
+                self.whisper = await asyncio.to_thread(WhisperModel, ny_modell_navn, device="cuda", compute_type=whisper_compute)
                 print("[ModelManager] Whisper byttet og klar.")
 
     async def capture_and_vad(self):
@@ -1477,6 +1555,27 @@ class AudioPipeline:
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500, headers=self._API_HEADERS)
 
+    async def api_set_model_handler(self, request):
+        """REST API (Admin): Bytter NLLB-200 modellinnstilling (auto, 3.3B, 1.3B, 600M)."""
+        try:
+            data = await request.json()
+            val = data.get("nllb_model_setting", "auto").strip()
+            if val not in ["auto", "3.3B", "1.3B", "600M"]:
+                return web.json_response({"error": "Ugyldig modellvalg"}, status=400, headers=self._API_HEADERS)
+            
+            self.config["nllb_model_setting"] = val
+            self.resolve_model_profile()
+            self.save_settings()
+            print(f"[Admin] NLLB modellinnstilling endret til: {val}. Aktiv modell satt til {self.config['active_nllb_model']}")
+            return web.json_response({
+                "status": "success",
+                "nllb_model_setting": val,
+                "active_nllb_model": self.config["active_nllb_model"],
+                "whisper_compute_type": self.config["whisper_compute_type"]
+            }, headers=self._API_HEADERS)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500, headers=self._API_HEADERS)
+
     async def api_mic_level_handler(self, request):
         """REST API (Admin): Raskt endepunkt for VU-meter før opptak starter."""
         return web.json_response({
@@ -2007,6 +2106,7 @@ class AudioPipeline:
         app.router.add_post('/api/admin/toggle_language', self.api_toggle_language_handler)
         app.router.add_post('/api/admin/upload_voice', self.api_upload_voice_handler)
         app.router.add_post('/api/admin/set_hw_channels', self.api_set_hw_channels_handler)
+        app.router.add_post('/api/admin/set_model', self.api_set_model_handler)
         app.router.add_post('/api/admin/start_mixer_recording', self.api_start_mixer_recording_handler)
         app.router.add_post('/api/admin/stop_mixer_recording', self.api_stop_mixer_recording_handler)
         app.router.add_get('/api/admin/recorded_sample_audio', self.api_recorded_sample_audio_handler)
