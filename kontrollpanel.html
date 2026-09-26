@@ -251,7 +251,7 @@
             <div class="status-icon" id="sys-status-icon">⏳</div>
             <div class="status-content">
                 <div class="status-title" id="sys-status-title">Starter tolkemotoren...</div>
-                <div class="status-desc" id="sys-status-desc">Laster inn AI-modeller i minnet. Vennligst vent.</div>
+                <div class="status-desc" id="sys-status-desc">Laster inn KI-modeller i minnet. Vennligst vent.</div>
                 <div id="sys-tech-details" class="tech-details" style="display: none;">
                     <strong>Teknisk diagnose:</strong> <span id="sys-tech-text"></span>
                 </div>
@@ -423,7 +423,10 @@
         let renderedTextingLangs = "";
 
         function renderTextingOptions(config) {
-            const langs = config.languages ? Object.keys(config.languages) : (config.available_languages || ["no", "sv", "da", "en"]);
+            const allLangs = config.languages ? Object.entries(config.languages) : [];
+            const langs = allLangs.length > 0 
+                ? allLangs.filter(([c, info]) => info.enabled !== false).map(([c]) => c)
+                : (config.available_languages || ["no", "sv", "da", "en"]);
             const langsStr = langs.join(",");
             if (langsStr === renderedTextingLangs) return;
 
@@ -511,7 +514,7 @@
                     sysBox.className = "dashboard-box status-starting";
                     sysIcon.textContent = "⏳";
                     sysTitle.textContent = config.error_title || "Starter tolkemotoren...";
-                    sysDesc.textContent = config.error_detail || "Laster inn AI-modeller i minnet...";
+                    sysDesc.textContent = config.error_detail || "Laster inn KI-modeller i minnet...";
                     sysTech.style.display = "none";
                     sysActions.style.display = "none";
                 } else if (sysStatus === "error") {
@@ -526,7 +529,7 @@
                     sysBox.className = "dashboard-box status-ready";
                     sysIcon.textContent = "🟢";
                     sysTitle.textContent = "Tolkemotoren er klar";
-                    sysDesc.textContent = "Alle AI-modeller er lastet inn i GPU (RTX 3060).";
+                    sysDesc.textContent = "Alle KI-modeller er lastet inn i GPU (RTX 3060).";
                     sysTech.style.display = "none";
                     sysActions.style.display = "none";
                 }

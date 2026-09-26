@@ -12,20 +12,125 @@
             margin: 0;
             padding: 20px;
             display: flex;
-            flex-direction: row;
-            gap: 20px;
+            flex-direction: column;
             height: 100vh;
             box-sizing: border-box;
         }
-        .admin-sidebar {
-            flex: 1.1;
-            max-width: 520px;
+        
+        /* TAB STYLES */
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #333;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            background-color: #1e1e1e;
+            color: #ccc;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover {
+            background-color: #2a2a2a;
+            color: #fff;
+        }
+        .tab-btn.active {
+            background-color: #4caf50;
+            color: #fff;
+        }
+        
+        .tab-content {
+            display: none;
+            flex: 1;
             background-color: #1e1e1e;
             padding: 25px;
-            border-radius: 12px;
+            border-radius: 0 12px 12px 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             overflow-y: auto;
         }
+        .tab-content.active {
+            display: block;
+        }
+        .tab-content.iframe-container {
+            padding: 0;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .tab-content.iframe-container.active {
+            display: flex;
+        }
+
+        /* 2-KOLONNER I MAPPEFANER */
+        .tab-grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            align-items: start;
+        }
+        .tab-col {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        .tab-col h2 {
+            margin-top: 0 !important;
+        }
+        .split-col-container {
+            display: flex;
+            flex: 1;
+            gap: 15px;
+            height: 100%;
+            min-height: 0;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        .split-col {
+            display: flex;
+            flex-direction: column;
+            background-color: #161616;
+            border-radius: 8px;
+            border: 1px solid #333;
+            overflow: hidden;
+            min-width: 0;
+        }
+        .split-col-main {
+            flex: 2; /* 2/3 av bredden til tolkestyring */
+        }
+        .split-col-side {
+            flex: 1; /* 1/3 av bredden til undertekster */
+        }
+        .split-col-header {
+            background-color: #222;
+            padding: 10px 15px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .split-iframe {
+            flex: 1;
+            width: 100%;
+            border: none;
+            background-color: #121212;
+        }
+        @media (max-width: 1024px) {
+            .tab-grid-2col {
+                grid-template-columns: 1fr;
+            }
+            .split-col-container {
+                flex-direction: column;
+            }
+        }
+        
         .admin-sidebar h1 {
             font-size: 1.8rem;
             margin-top: 0;
@@ -44,12 +149,11 @@
             padding-bottom: 8px;
         }
         .control-panel-iframe {
-            flex: 2;
+            flex: 1;
+            width: 100%;
             border: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border-radius: 0 0 12px 12px;
             background-color: #1e1e1e;
-            height: 100%;
         }
         
         /* Form-elementer */
@@ -136,10 +240,19 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
         }
         .lang-card:hover {
             border-color: #4caf50;
+        }
+        .lang-card.disabled {
+            opacity: 0.55;
+            background-color: #1a1a1a;
+            border-style: dashed;
+        }
+        .lang-card.disabled:hover {
+            opacity: 0.85;
+            border-color: #888;
         }
         .lang-info-main {
             display: flex;
@@ -650,7 +763,17 @@
     </style>
 </head>
 <body>
-    <div class="admin-sidebar">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab('tab-sprak', this)">🌐 Aktive språk...</button>
+        <button class="tab-btn" onclick="openTab('tab-maskinvare', this)">🎛️ Lydruting og Maskinvare</button>
+        <button class="tab-btn" onclick="openTab('tab-ordliste', this)">📖 Håndter Ordliste (inkl. uttale)</button>
+        <button class="tab-btn" onclick="openTab('tab-opptak', this)">🎙️ Flerspors Lydopptak</button>
+        <button class="tab-btn" onclick="openTab('tab-tolkestyring', this)">📱 Tolkestyring</button>
+        <button class="tab-btn" onclick="openTab('tab-skjerm', this)">📺 Live Skjerm (Undertekster)</button>
+    </div>
+
+    <!-- TAB 1: Aktive språk -->
+    <div id="tab-sprak" class="tab-content active admin-sidebar">
         <h1>
             <span>⚙️ Teknisk Administrasjon</span>
             <span id="topRecBadge" class="rec-live-badge-top" style="display: none;" onclick="scrollToRecordingSection()">
@@ -659,22 +782,29 @@
         </h1>
         
         <div class="info-box">
-            Her kan du styre oversettelsesspråk, klone nye stemmeprofiler og justere antall samtidige lydkanaler ut på lydkortet. Alt synkroniseres direkte til tolke-grensesnittet til høyre.
+            Her kan du styre oversettelsesspråk, aktivere/deaktivere språk for tolkestyring med avkrysningsboksene, og legge til nye språk. Systemet finner automatisk stemmeprøver for opplesning, men varsler deg dersom du må lese inn eller laste opp en prøve selv.
         </div>
 
-        <!-- Seksjon 1: Oversikt over installerte språk -->
-        <h2>🌐 Aktive Språk i Tolkemotoren</h2>
-        <div id="languageList" class="language-list">
-            <div style="color: #888; font-size: 0.9rem;">Henter språkliste...</div>
-        </div>
+        <div class="tab-grid-2col">
+            <!-- Kolonne 1: Aktive språk -->
+            <div class="tab-col">
+                <h2>🌐 Aktive Språk i Tolkemotoren</h2>
+                <div class="hint-text" style="margin-bottom: 12px; color: #bbb; line-height: 1.4;">
+                    💡 <strong>Tips:</strong> Huk av eller på avkrysningsboksen foran hvert språk for å velge hvilke språk som skal kunne velges i tolkestyring / kontrollpanelet. Deaktiverte språk beholdes i systemet, men skjules for tolken.
+                </div>
+                <div id="languageList" class="language-list">
+                    <div style="color: #888; font-size: 0.9rem;">Henter språkliste...</div>
+                </div>
+            </div>
 
-        <!-- Seksjon 2: Legg til nytt språk og stemme -->
-        <h2>➕ Legg til nytt språk i Tolken</h2>
-        <div class="info-box" style="border-left-color: #9c27b0;">
-            NLLB-200 oversetter automatisk til det valgte språket. Hvis du også laster opp en 10-15 sekunders lydprøve, kloner AI-en stemmen for øreplugg-opplesning. Hvis ikke, blir språket tilgjengelig for direkte underteksting på skjerm!
-        </div>
+            <!-- Kolonne 2: Legg til nytt språk og stemme -->
+            <div class="tab-col">
+                <h2>➕ Legg til nytt språk i Tolken</h2>
+                <div class="info-box" style="border-left-color: #9c27b0;">
+                    NLLB-200 oversetter automatisk til det valgte språket. Systemet finner automatisk en profesjonell stemmeprøve for opplest lyd i øreplugger, men gir beskjed dersom det ikke finnes noen for det aktuelle språket – først da behøver du å lese inn fra miksebordet eller laste opp en stemmeprøve selv!
+                </div>
 
-        <form id="newLanguageForm" onsubmit="submitNewLanguage(event)">
+                <form id="newLanguageForm" onsubmit="submitNewLanguage(event)">
             <label for="langPreset">Velg et språk fra listen (autofyller koder):</label>
             <select id="langPreset" onchange="onPresetChange()">
                 <option value="">-- Velg et språk eller fyll ut manuelt --</option>
@@ -761,7 +891,7 @@
                     <div class="mixer-tips">
                         <strong>💡 Slik leser du inn stemmeprøve fra mikrofonen:</strong>
                         <ul>
-                            <li>⏱️ <strong>10–15 sekunder er nok:</strong> Du trenger ikke lese lenger – AI-en lærer stemmens klang og dynamikk lynraskt.</li>
+                            <li>⏱️ <strong>10–15 sekunder er nok:</strong> Du trenger ikke lese lenger – KI-en lærer stemmens klang og dynamikk lynraskt.</li>
                             <li>🗣️ <strong>Si hva som helst:</strong> Les et bibelvers, snakk om været, eller si favorittoppskriften din. Hva du sier betyr ingenting!</li>
                             <li>🎙️ <strong>Rolig, nøytral stemme:</strong> Snakk med en nøytral, naturlig stemme i ditt vanlige taletempo.</li>
                             <li>🎚️ <strong>Miksebord:</strong> Lyd tas opp direkte fra mikrofonen koblet til lydkortet (Audient iD4 / mikseren).</li>
@@ -864,214 +994,301 @@
             <button type="submit" id="addLangBtn" class="action-btn">Aktiver Språk i KI-Tolken</button>
             <div id="addLangStatus" class="status-msg"></div>
         </form>
-
-        <!-- Seksjon 3: Lydkanaler og Maskinvare -->
-        <h2>🎛️ Lydruting og Maskinvare</h2>
-        <label for="channels">Antall samtidige språk ut (Lydkort-kanaler):</label>
-        <div style="display: flex; gap: 10px;">
-            <input type="number" id="channels" min="1" max="2" value="2">
-            <button onclick="setChannels()" class="action-btn" style="width: auto; padding: 11px 20px;">Oppdater</button>
-        </div>
-        <div id="gpu-warning" class="warning-box">
-            ⚠️ <strong>Advarsel for 3+ språk:</strong><br>
-            Sanntids tekst-til-tale (TTS) er krevende på skjermkortet. For 3 eller flere språk samtidig anbefales minst <strong>RTX 4070 Ti Super</strong>, ellers vil opplest lyd kunne henge etter. Pass også på at lydkortet har nok fysiske utganger.
-        </div>
-
-        <!-- Seksjon 3: Håndter Ordliste (Maskert Oversettelse) -->
-        <h2>📖 Håndter Ordliste (Maskert Oversettelse)</h2>
-        <div class="info-box" style="border-left-color: #00bcd4;">
-            <p style="margin-top: 0; margin-bottom: 8px;">
-                Siden NLLB oversetter ut fra vanlig samfunnsstatistikk, bommer den ofte på religiøse termer ("lammet" blir "paralyzed" i stedet for "the lamb"). Derfor har vi en <strong>Maskert Oversettelse</strong>.
-            </p>
-            <p style="margin-bottom: 5px;"><strong>Slik legger du til ord for et nytt språk (Null koding!):</strong></p>
-            <ol style="margin-top: 0; margin-bottom: 0; padding-left: 20px;">
-                <li>Gå til f.eks. <a href="https://duckduckgo.com/chat" target="_blank" style="color: #4dd0e1;">DuckDuckGo AI Chat</a> eller ChatGPT (krever ingen innlogging).</li>
-                <li>Kopier teksten i <strong>Prompt-boksen</strong> under, og lim den inn i chatten.</li>
-                <li>Chat-botten vil gi deg en ferdig oversatt JSON-liste tilbake.</li>
-                <li>Kopier den oversatte JSON-listen, lim den inn i <strong>Lagre-boksen</strong> nederst, og trykk Lagre.</li>
-            </ol>
-        </div>
-        
-        <label>1. Kopier denne teksten (Prompt for AI):</label>
-        <textarea id="aiPromptText" readonly style="width: 100%; height: 120px; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #444; background-color: #2a2a2a; color: #a5d6a7; font-family: monospace; font-size: 0.85rem; resize: vertical; box-sizing: border-box;">
-Jeg har en JSON-ordliste for en app. Oversett de norske ordene (hovednøklene) til [SKRIV INN SPRÅK]. 
-Det er kritisk viktig at du bruker frikirkelig/kristen kontekst (f.eks: 'lammet' er 'the lamb' og 'lovsang' er 'worship').
-VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller slette noen av de eksisterende språkene ("en", "sv", "da", "uk" osv) i JSON-filen. Behold nøyaktig JSON-format. Her er listen:
-
-[KLIKK "HENT NÅVÆRENDE ORDLISTE" FOR Å FYLLE INN DATA HER]
-        </textarea>
-        <button type="button" class="btn-secondary" onclick="fetchDictionaryForPrompt()" style="width: 100%; margin-bottom: 20px;">
-            📄 Hent nåværende ordliste for å lime inn i prompten
-        </button>
-
-        <form id="dictionaryForm" onsubmit="saveDictionary(event)">
-            <label>2. Lim inn det ferdige JSON-svaret fra AI her:</label>
-            <textarea id="dictionaryJsonInput" required placeholder="Lim inn JSON her..." style="width: 100%; height: 150px; padding: 12px; margin-bottom: 14px; border-radius: 6px; border: 1px solid #444; background-color: #1e1e1e; color: #fff; font-family: monospace; font-size: 0.85rem; resize: vertical; box-sizing: border-box;"></textarea>
-            <button type="submit" class="action-btn" id="btnSaveDict" style="background-color: #00bcd4;">
-                💾 Lagre Ordliste
-            </button>
-            <div id="dictStatus" class="status-msg"></div>
-        </form>
-
-        <!-- Seksjon 3.5: Fonetisk Uttale (Tekst-til-tale) -->
-        <h2>🗣️ Fonetisk Uttale (Tekst-til-tale)</h2>
-        <div class="info-box" style="border-left-color: #ff9800; background-color: #241d14; margin-bottom: 16px;">
-            <p style="margin-top: 0; margin-bottom: 6px;">
-                AI-stemmer (som OmniVoice) kan av og til uttale visse ord unaturlig på norsk (f.eks. uttale "Herren" med overtydelig 'e', eller slite med bibelske egennavn).
-            </p>
-            <p style="margin-bottom: 0; font-size: 0.85rem; color: #ffcc80;">
-                💡 <strong>Viktig:</strong> Endringer her påvirker <em>kun</em> hva som leses opp i hodetelefonene (TTS). <strong>Skjermteksten forblir 100% uendret</strong> med normal rettskriving.
-            </p>
-        </div>
-
-        <div style="background-color: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 16px; margin-bottom: 25px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <h4 style="margin: 0; color: #fff;">Ordliste for fonetisk uttale:</h4>
-                <button type="button" class="btn-secondary" onclick="togglePronunciationView()" id="btnTogglePronView" style="font-size: 0.8rem; padding: 5px 12px; margin: 0;">
-                    📝 Vis som rå JSON
-                </button>
             </div>
+        </div>
+    </div>
 
-            <!-- Visuell tabell / liste over ord -->
-            <div id="pronunciationTableView">
-                <div style="display: grid; grid-template-columns: 1fr 1fr 40px; gap: 8px; margin-bottom: 8px; font-weight: bold; font-size: 0.82rem; color: #aaa; text-transform: uppercase;">
-                    <div>Ord i talen (som skrives)</div>
-                    <div>Slik det skal uttales (fonetisk)</div>
-                    <div></div>
+    <!-- TAB 2: Lydruting og Maskinvare -->
+    <div id="tab-maskinvare" class="tab-content admin-sidebar">
+        <h1>
+            <span>🎛️ Lydruting og Maskinvare</span>
+        </h1>
+        <div class="tab-grid-2col">
+            <!-- Kolonne 1: Lydkort-kanaler -->
+            <div class="tab-col">
+                <h2>🔊 Lydkanaler og Utganger</h2>
+                <div class="info-box">
+                    Velg hvor mange uavhengige språk som skal sendes ut på de fysiske utgangene på USB-lydkortet (f.eks. Audient iD4 / Behringer U-Phoria). Kanalene rutes direkte til tolkesendere eller miksebord.
                 </div>
-
-                <div id="pronunciationList" style="display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto; margin-bottom: 14px; padding-right: 4px;">
-                    <!-- Fylles dynamisk -->
+                <label for="channels">Antall samtidige språk ut (Lydkort-kanaler):</label>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <input type="number" id="channels" min="1" max="2" value="2" style="margin-bottom: 0;">
+                    <button onclick="setChannels()" class="action-btn" style="width: auto; padding: 11px 20px;">Oppdater</button>
                 </div>
-
-                <!-- Legg til nytt ordpar -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: center; padding-top: 12px; border-top: 1px solid #333;">
-                    <input type="text" id="newPronWord" placeholder="F.eks. Herren" style="margin-bottom: 0; padding: 10px 12px; background: #2a2a2a; border: 1px solid #444; border-radius: 6px; color: #fff;">
-                    <input type="text" id="newPronPhonetic" placeholder="F.eks. Hærren" style="margin-bottom: 0; padding: 10px 12px; background: #2a2a2a; border: 1px solid #444; border-radius: 6px; color: #fff;">
-                    <button type="button" class="action-btn" onclick="addPronunciationRow()" style="background-color: #ff9800; margin: 0; padding: 10px 18px; white-space: nowrap;">
-                        ➕ Legg til
-                    </button>
+                <div id="gpu-warning" class="warning-box">
+                    ⚠️ <strong>Advarsel for 3+ språk:</strong><br>
+                    Sanntids tekst-til-tale (TTS) er krevende på skjermkortet. For 3 eller flere språk samtidig anbefales minst <strong>RTX 4070 Ti Super</strong>, ellers vil opplest lyd kunne henge etter. Pass også på at lydkortet har nok fysiske utganger.
                 </div>
             </div>
 
-            <!-- Rå JSON visning -->
-            <div id="pronunciationJsonView" style="display: none;">
-                <textarea id="pronunciationJsonInput" placeholder="Lim inn JSON her..." style="width: 100%; height: 160px; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #444; background-color: #161616; color: #fff; font-family: monospace; font-size: 0.85rem; resize: vertical; box-sizing: border-box;"></textarea>
-            </div>
-
-            <div style="margin-top: 14px;">
-                <button type="button" class="action-btn" id="btnSavePron" onclick="savePronunciation()" style="background-color: #ff9800; width: 100%;">
-                    💾 Lagre Uttale-ordliste
-                </button>
-            </div>
-            <div id="pronStatus" class="status-msg"></div>
-        </div>
-
-        <!-- Seksjon 4: Flerspors Lydopptak (Tale og Tolk) -->
-        <div id="multitrackRecordingSection" class="rec-section">
-            <h2>
-                <span>🎙️ Flerspors Lydopptak</span>
-                <span id="sectionRecStatusBadge" style="font-size: 0.8rem; font-weight: normal; color: #aaa;">Klar</span>
-            </h2>
-
-            <div class="info-box" style="border-left-color: #e53935; background-color: #22181a; margin-bottom: 14px;">
-                <strong>🔴 Sanntids opptak av tale og tolk:</strong><br>
-                Tar opp talerens stemme fra miksebord/mikrofon sammen med alle aktive tolkespråk synkront i et flerspors WAV-lydopptak.
-                <div style="margin-top: 6px; font-size: 0.82rem; color: #ffcdd2; line-height: 1.4;">
-                    💡 <em>Hvorfor WAV?</em> Standard MP3 støtter kun opptil 2 spor (stereo). Opptaket lagres derfor som ukomprimert 48 kHz 16-bit PCM flerspors WAV for fullverdig import i DAW (Audacity/Reaper), samt separate mono WAV-filer (stems) for hvert språk.
-                </div>
-            </div>
-
-            <!-- Forhåndsvisning av aktive spor -->
-            <div class="tracks-preview-box">
-                <h4>🎚️ Aktive spor for opptak:</h4>
-                <div id="recordingTracksList" class="track-pill-list">
-                    <div style="color: #888; font-size: 0.85rem;">Laster spor...</div>
-                </div>
-            </div>
-
-            <!-- Kontrollpanel for opptak -->
-            <div id="recControlIdle">
-                <button type="button" id="btnStartRecording" onclick="startMultitrackRecording()" class="btn-multitrack-start">
-                    <span class="rec-dot" style="width: 12px; height: 12px;"></span>
-                    <span>Start Flersporsopptak</span>
-                </button>
-            </div>
-
-            <div id="recControlActive" style="display: none;">
-                <div class="recording-active-card">
-                    <div class="rec-indicator" style="margin-bottom: 5px;">
-                        <span class="rec-dot"></span> OPPTAK PÅGÅR
+            <!-- Kolonne 2: Systemstatus & Arkitektur -->
+            <div class="tab-col">
+                <h2>⚡ Maskinvarestatus og Spesifikasjoner</h2>
+                <div style="background-color: #252525; border: 1px solid #333; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                    <div>
+                        <div style="font-weight: bold; color: #81c784; margin-bottom: 4px;">🎮 GPU & VRAM (NVIDIA RTX 3060 / 12GB):</div>
+                        <div style="font-size: 0.88rem; color: #ccc; line-height: 1.4;">
+                            • <strong>NLLB-200 Oversetter:</strong> Kjører i <code>float16</code> (~2.6 GB VRAM).<br>
+                            • <strong>Faster-Whisper:</strong> Kjører i <code>int8_float16</code> (~1.5 GB VRAM).<br>
+                            • <strong>OmniVoice TTS:</strong> Zero-shot lokal motor (~3.0 GB VRAM).<br>
+                            • <em>Totalt VRAM-forbruk: ~7.1 GB (god margin under 12 GB-grensen).</em>
+                        </div>
                     </div>
-                    <div id="recTimerBig" class="timer-big">00:00</div>
-                    <div id="recActiveTracksDesc" style="font-size: 0.88rem; color: #ffcdd2; margin-bottom: 12px;">
-                        Tar opp spor i sanntid...
+                    <div style="border-top: 1px solid #333; padding-top: 10px;">
+                        <div style="font-weight: bold; color: #64b5f6; margin-bottom: 4px;">🎙️ USB Lydkort & Miksebord:</div>
+                        <div style="font-size: 0.88rem; color: #ccc; line-height: 1.4;">
+                            • Inngang: Mikrofon/miksebord-signal via Audient iD4 (48 kHz mono PCM).<br>
+                            • Utganger: Dynamisk kanalruting til separate tolkesendere (1–16 kanaler).
+                        </div>
                     </div>
-                    <button type="button" id="btnStopRecording" onclick="stopMultitrackRecording()" class="btn-multitrack-stop">
-                        <span>⏹️ Stopp og Lagre Opptak</span>
-                    </button>
-                </div>
-            </div>
-
-            <div id="recSavingStatus" class="status-msg" style="background-color: #2b1d1d; color: #ffb4ab; border: 1px solid #d32f2f;">
-                <span class="spinner"></span> Lagrer og klargjør flersporsopptak...
-            </div>
-
-            <!-- Resultat fra siste opptak -->
-            <div id="recResultBox" class="recording-result-card" style="display: none;">
-                <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #2e4a35; padding-bottom: 8px; margin-bottom: 10px;">
-                    <span style="font-weight: bold; color: #81c784;">✅ Opptak Fullført og Lagret</span>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span id="recResultDuration" style="font-size: 0.85rem; color: #a5d6a7;"></span>
-                        <button type="button" class="btn-delete" style="padding: 3px 8px; font-size: 0.75rem;" onclick="deleteLastRecording()" title="Slett opptaket og fjern avspillingsmulighet">🗑️ Slett opptak</button>
-                    </div>
-                </div>
-                <div style="font-size: 0.85rem; color: #ccc; margin-bottom: 10px;">
-                    Fil: <code id="recResultFilename" style="color: #81c784;"></code> (<span id="recResultSize"></span>)
-                </div>
-
-                <!-- Master flersporsknapp -->
-                <a id="btnDownloadMaster" href="#" download class="download-master-btn">
-                    🎛️ Last ned Komplett Flersporsopptak (WAV)
-                </a>
-
-                <!-- Enkeltspor (Stems) -->
-                <div style="font-size: 0.88rem; font-weight: bold; color: #e0e0e0; margin-bottom: 8px;">
-                    📥 Enkeltspor (Stems per språk):
-                </div>
-                <div id="recStemsList">
-                    <!-- Fylles dynamisk -->
-                </div>
-
-                <!-- Innebygd avspiller for forhåndslytting -->
-                <div id="recPreviewContainer" style="margin-top: 14px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; display: none;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <div id="recPreviewTitle" style="font-size: 0.82rem; color: #90caf9;"></div>
-                        <button type="button" onclick="closeAudioPreview()" style="background: none; border: none; color: #aaa; cursor: pointer; font-size: 0.9rem;" title="Lukk avspiller">✖</button>
-                    </div>
-                    <audio id="recPreviewAudio" controls style="width: 100%; height: 36px;"></audio>
-                </div>
-            </div>
-
-            <!-- Opptaksarkiv (Tidligere opptak) -->
-            <div style="margin-top: 18px; border-top: 1px solid #333; padding-top: 14px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleArchiveVisibility()">
-                    <span style="font-size: 0.95rem; font-weight: bold; color: #ccc;">📁 Tidligere Opptak (<span id="archiveCount">0</span>)</span>
-                    <span id="archiveToggleIcon" style="font-size: 0.8rem; color: #888;">Skjul ▲</span>
-                </div>
-                <div id="archiveContainer" style="display: block; margin-top: 10px;">
-                    <div id="archiveList" class="archive-list">
-                        <div style="color: #777; font-size: 0.85rem; text-align: center; padding: 10px;">Laster opptaksarkiv...</div>
+                    <div style="border-top: 1px solid #333; padding-top: 10px;">
+                        <div style="font-weight: bold; color: #ffb74d; margin-bottom: 4px;">🚀 Ekstrem lav forsinkelse (Low-Latency):</div>
+                        <div style="font-size: 0.88rem; color: #ccc; line-height: 1.4;">
+                            • Dynamisk gasspedal (opptil 1.50x hastighet) hindrer gummistrikk-effekt på lyd.<br>
+                            • WebSocket-push gir umiddelbar visning av undertekster på skjerm.
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Iframe til det vanlige kontrollpanelet -->
-    <iframe class="control-panel-iframe" src="/kontrollpanel" title="Kontrollpanel for mobil"></iframe>
+    <!-- TAB 3: Håndter Ordliste -->
+    <div id="tab-ordliste" class="tab-content admin-sidebar">
+        <h1>
+            <span>📖 Håndter Ordliste og Uttale</span>
+        </h1>
+        <div class="tab-grid-2col">
+            <!-- Kolonne 1: Maskert Oversettelse -->
+            <div class="tab-col">
+                <h2>📖 Maskert Oversettelse (NLLB-200)</h2>
+                <div class="info-box" style="border-left-color: #00bcd4;">
+                    <p style="margin-top: 0; margin-bottom: 8px;">
+                        Siden NLLB oversetter ut fra vanlig samfunnsstatistikk, bommer den ofte på kristne/frikirkelige termer ("lammet" blir "paralyzed" i stedet for "the lamb"). Derfor har vi <strong>Maskert Oversettelse</strong>.
+                    </p>
+                    <p style="margin-bottom: 5px;"><strong>Slik legger du til ord for et nytt språk (Null koding!):</strong></p>
+                    <ol style="margin-top: 0; margin-bottom: 0; padding-left: 20px;">
+                        <li>Gå til f.eks. <a href="https://duckduckgo.com/chat" target="_blank" style="color: #4dd0e1;">DuckDuckGo Chat</a> eller ChatGPT.</li>
+                        <li>Kopier teksten i prompt-boksen under og lim inn.</li>
+                        <li>Kopier det ferdige JSON-svaret og lagre det under.</li>
+                    </ol>
+                </div>
+                
+                <label>1. Kopier denne teksten (Prompt for KI):</label>
+                <textarea id="aiPromptText" readonly style="width: 100%; height: 110px; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #444; background-color: #2a2a2a; color: #a5d6a7; font-family: monospace; font-size: 0.85rem; resize: vertical; box-sizing: border-box;">
+Jeg har en JSON-ordliste for en app. Oversett de norske ordene (hovednøklene) til [SKRIV INN SPRÅK]. 
+Det er kritisk viktig at du bruker frikirkelig/kristen kontekst (f.eks: 'lammet' er 'the lamb' og 'lovsang' er 'worship').
+VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller slette noen av de eksisterende språkene ("en", "sv", "da", "uk" osv) i JSON-filen. Behold nøyaktig JSON-format. Her er listen:
+
+[KLIKK "HENT NÅVÆRENDE ORDLISTE" FOR Å FYLLE INN DATA HER]
+                </textarea>
+                <button type="button" class="btn-secondary" onclick="fetchDictionaryForPrompt()" style="width: 100%; margin-bottom: 15px;">
+                    📄 Hent nåværende ordliste for å lime inn i prompten
+                </button>
+
+                <form id="dictionaryForm" onsubmit="saveDictionary(event)">
+                    <label>2. Lim inn det ferdige JSON-svaret fra KI her:</label>
+                    <textarea id="dictionaryJsonInput" required placeholder="Lim inn JSON her..." style="width: 100%; height: 140px; padding: 12px; margin-bottom: 14px; border-radius: 6px; border: 1px solid #444; background-color: #1e1e1e; color: #fff; font-family: monospace; font-size: 0.85rem; resize: vertical; box-sizing: border-box;"></textarea>
+                    <button type="submit" class="action-btn" id="btnSaveDict" style="background-color: #00bcd4;">
+                        💾 Lagre Ordliste
+                    </button>
+                    <div id="dictStatus" class="status-msg"></div>
+                </form>
+            </div>
+
+            <!-- Kolonne 2: Fonetisk Uttale -->
+            <div class="tab-col">
+                <h2>🗣️ Fonetisk Uttale (Tekst-til-tale)</h2>
+                <div class="info-box" style="border-left-color: #ff9800; background-color: #241d14; margin-bottom: 16px;">
+                    <p style="margin-top: 0; margin-bottom: 6px;">
+                        KI-stemmer (som OmniVoice) kan av og til uttale visse ord unaturlig på norsk (f.eks. uttale "Herren" med overtydelig 'e', eller slite med bibelske egennavn).
+                    </p>
+                    <p style="margin-bottom: 0; font-size: 0.85rem; color: #ffcc80;">
+                        💡 <strong>Viktig:</strong> Endringer her påvirker <em>kun</em> hva som leses opp i hodetelefonene (TTS). <strong>Skjermteksten forblir 100% uendret</strong> med normal rettskriving.
+                    </p>
+                </div>
+
+                <div style="background-color: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 16px; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h4 style="margin: 0; color: #fff;">Ordliste for fonetisk uttale:</h4>
+                        <button type="button" class="btn-secondary" onclick="togglePronunciationView()" id="btnTogglePronView" style="font-size: 0.8rem; padding: 5px 12px; margin: 0;">
+                            📝 Vis som rå JSON
+                        </button>
+                    </div>
+
+                    <!-- Visuell tabell / liste over ord -->
+                    <div id="pronunciationTableView">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 40px; gap: 8px; margin-bottom: 8px; font-weight: bold; font-size: 0.82rem; color: #aaa; text-transform: uppercase;">
+                            <div>Ord i talen (som skrives)</div>
+                            <div>Slik det skal uttales (fonetisk)</div>
+                            <div></div>
+                        </div>
+
+                        <div id="pronunciationList" style="display: flex; flex-direction: column; gap: 8px; max-height: 230px; overflow-y: auto; margin-bottom: 14px; padding-right: 4px;">
+                            <!-- Fylles dynamisk -->
+                        </div>
+
+                        <!-- Legg til nytt ordpar -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: center; padding-top: 12px; border-top: 1px solid #333;">
+                            <input type="text" id="newPronWord" placeholder="F.eks. Herren" style="margin-bottom: 0; padding: 10px 12px; background: #2a2a2a; border: 1px solid #444; border-radius: 6px; color: #fff;">
+                            <input type="text" id="newPronPhonetic" placeholder="F.eks. Hærren" style="margin-bottom: 0; padding: 10px 12px; background: #2a2a2a; border: 1px solid #444; border-radius: 6px; color: #fff;">
+                            <button type="button" class="action-btn" onclick="addPronunciationRow()" style="background-color: #ff9800; margin: 0; padding: 10px 18px; white-space: nowrap;">
+                                ➕ Legg til
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Rå JSON visning -->
+                    <div id="pronunciationJsonView" style="display: none;">
+                        <textarea id="pronunciationJsonInput" placeholder="Lim inn JSON her..." style="width: 100%; height: 230px; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #444; background-color: #161616; color: #fff; font-family: monospace; font-size: 0.85rem; resize: vertical; box-sizing: border-box;"></textarea>
+                    </div>
+
+                    <div style="margin-top: 14px;">
+                        <button type="button" class="action-btn" id="btnSavePron" onclick="savePronunciation()" style="background-color: #ff9800; width: 100%;">
+                            💾 Lagre Uttale-ordliste
+                        </button>
+                    </div>
+                    <div id="pronStatus" class="status-msg"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 4: Flerspors Lydopptak -->
+    <div id="tab-opptak" class="tab-content admin-sidebar">
+        <div id="multitrackRecordingSection" class="rec-section">
+            <h1>
+                <span>🎙️ Flerspors Lydopptak (Tale og Tolk)</span>
+                <span id="sectionRecStatusBadge" style="font-size: 0.85rem; font-weight: normal; color: #aaa; margin-left: 10px;">Klar</span>
+            </h1>
+
+            <div class="tab-grid-2col">
+                <!-- Kolonne 1: Live Opptakskontroll & Siste Opptak -->
+                <div class="tab-col">
+                    <h2>🔴 Live Opptak</h2>
+                    <div class="info-box" style="border-left-color: #e53935; background-color: #22181a; margin-bottom: 14px;">
+                        <strong>Sanntids opptak av tale og tolk:</strong><br>
+                        Tar opp talerens stemme fra miksebord/mikrofon sammen med alle aktive tolkespråk synkront i et flerspors WAV-lydopptak (48 kHz 16-bit PCM).
+                    </div>
+
+                    <!-- Forhåndsvisning av aktive spor -->
+                    <div class="tracks-preview-box">
+                        <h4>🎚️ Aktive spor for opptak:</h4>
+                        <div id="recordingTracksList" class="track-pill-list">
+                            <div style="color: #888; font-size: 0.85rem;">Laster spor...</div>
+                        </div>
+                    </div>
+
+                    <!-- Kontrollpanel for opptak -->
+                    <div id="recControlIdle">
+                        <button type="button" id="btnStartRecording" onclick="startMultitrackRecording()" class="btn-multitrack-start">
+                            <span class="rec-dot" style="width: 12px; height: 12px;"></span>
+                            <span>Start Flersporsopptak</span>
+                        </button>
+                    </div>
+
+                    <div id="recControlActive" style="display: none;">
+                        <div class="recording-active-card">
+                            <div class="rec-indicator" style="margin-bottom: 5px;">
+                                <span class="rec-dot"></span> OPPTAK PÅGÅR
+                            </div>
+                            <div id="recTimerBig" class="timer-big">00:00</div>
+                            <div id="recActiveTracksDesc" style="font-size: 0.88rem; color: #ffcdd2; margin-bottom: 12px;">
+                                Tar opp spor i sanntid...
+                            </div>
+                            <button type="button" id="btnStopRecording" onclick="stopMultitrackRecording()" class="btn-multitrack-stop">
+                                <span>⏹️ Stopp og Lagre Opptak</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="recSavingStatus" class="status-msg" style="background-color: #2b1d1d; color: #ffb4ab; border: 1px solid #d32f2f;">
+                        <span class="spinner"></span> Lagrer og klargjør flersporsopptak...
+                    </div>
+
+                    <!-- Resultat fra siste opptak -->
+                    <div id="recResultBox" class="recording-result-card" style="display: none;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #2e4a35; padding-bottom: 8px; margin-bottom: 10px;">
+                            <span style="font-weight: bold; color: #81c784;">✅ Opptak Fullført og Lagret</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span id="recResultDuration" style="font-size: 0.85rem; color: #a5d6a7;"></span>
+                                <button type="button" class="btn-delete" style="padding: 3px 8px; font-size: 0.75rem;" onclick="deleteLastRecording()" title="Slett opptaket og fjern avspillingsmulighet">🗑️ Slett opptak</button>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.85rem; color: #ccc; margin-bottom: 10px;">
+                            Fil: <code id="recResultFilename" style="color: #81c784;"></code> (<span id="recResultSize"></span>)
+                        </div>
+
+                        <!-- Master flersporsknapp -->
+                        <a id="btnDownloadMaster" href="#" download class="download-master-btn">
+                            🎛️ Last ned Komplett Flersporsopptak (WAV)
+                        </a>
+
+                        <!-- Enkeltspor (Stems) -->
+                        <div style="font-size: 0.88rem; font-weight: bold; color: #e0e0e0; margin-bottom: 8px;">
+                            📥 Enkeltspor (Stems per språk):
+                        </div>
+                        <div id="recStemsList">
+                            <!-- Fylles dynamisk -->
+                        </div>
+
+                        <!-- Innebygd avspiller for forhåndslytting -->
+                        <div id="recPreviewContainer" style="margin-top: 14px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; display: none;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <div id="recPreviewTitle" style="font-size: 0.82rem; color: #90caf9;"></div>
+                                <button type="button" onclick="closeAudioPreview()" style="background: none; border: none; color: #aaa; cursor: pointer; font-size: 0.9rem;" title="Lukk avspiller">✖</button>
+                            </div>
+                            <audio id="recPreviewAudio" controls style="width: 100%; height: 36px;"></audio>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kolonne 2: Opptaksarkiv -->
+                <div class="tab-col">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 8px; margin-bottom: 15px;">
+                        <h2 style="margin: 0; border: none; padding: 0;">📁 Tidligere Opptak (<span id="archiveCount">0</span>)</h2>
+                        <button type="button" class="btn-secondary" onclick="fetchRecordingArchive()" style="font-size: 0.8rem; padding: 4px 10px;">🔄 Oppdater</button>
+                    </div>
+                    <div id="archiveContainer" style="display: block;">
+                        <div id="archiveList" class="archive-list" style="max-height: 580px;">
+                            <div style="color: #777; font-size: 0.85rem; text-align: center; padding: 10px;">Laster opptaksarkiv...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 5: Tolkestyring (Full bredde) -->
+    <div id="tab-tolkestyring" class="tab-content iframe-container">
+        <div style="background-color: #222; padding: 10px 20px; font-weight: bold; font-size: 0.95rem; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
+            <span>📱 Fjernkontroll (Tolkestyring)</span>
+            <a href="/kontrollpanel" target="_blank" style="color: #4caf50; font-size: 0.85rem; text-decoration: none;">↗️ Åpne i eget vindu</a>
+        </div>
+        <iframe class="control-panel-iframe" src="/kontrollpanel" title="Kontrollpanel for tolkestyring"></iframe>
+    </div>
+
+    <!-- TAB 6: Live Skjerm (Undertekster) -->
+    <div id="tab-skjerm" class="tab-content iframe-container">
+        <div style="background-color: #222; padding: 10px 20px; font-weight: bold; font-size: 0.95rem; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
+            <span>📺 Live Skjerm (Storskjerm / Undertekster)</span>
+            <a href="/skjerm" target="_blank" style="color: #2196f3; font-size: 0.85rem; text-decoration: none;">↗️ Åpne i fullskjerm / eget vindu</a>
+        </div>
+        <iframe class="control-panel-iframe" src="/skjerm" title="Live undertekster"></iframe>
+    </div>
 
     <script>
+        function openTab(tabId, btnElement) {
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(c => c.classList.remove('active'));
+            
+            const btns = document.querySelectorAll('.tab-btn');
+            btns.forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            if(btnElement) btnElement.classList.add('active');
+        }
+
         const apiBase = () => `http://${window.location.hostname || 'localhost'}:8080`;
         
         let currentLanguages = {};
@@ -1115,7 +1332,8 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
             
             for (const [code, info] of Object.entries(languages)) {
                 const card = document.createElement('div');
-                card.className = 'lang-card';
+                const isEnabled = info.enabled !== false;
+                card.className = 'lang-card' + (isEnabled ? '' : ' disabled');
 
                 const hasVoice = voices.includes(code) || info.has_voice;
 
@@ -1123,15 +1341,19 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
                     ? `<span class="badge badge-voice">🔊 Klonet stemme</span>`
                     : `<span class="badge badge-textonly">📝 Kun teksting</span>`;
                 
-                const deleteBtn = `<button class="btn-delete" onclick="deleteLanguage('${code}', '${info.name}')" title="Fjern språket fra tolken">Slett</button>`;
+                const deleteBtn = `<button class="btn-delete" onclick="deleteLanguage('${code}', '${info.name}')" title="Fjern språket permanent fra tolken">Slett</button>`;
 
                 card.innerHTML = `
-                    <div class="lang-info-main">
-                        <div class="lang-title">
-                            ${info.name} 
-                            <span style="font-size: 0.8rem; color: #888; font-weight: normal;">(${code})</span>
+                    <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                        <input type="checkbox" id="toggle_${code}" ${isEnabled ? 'checked' : ''} onchange="toggleLanguageEnabled('${code}', this.checked)" title="${isEnabled ? 'Aktivt i tolkestyring. Klikk for å deaktivere.' : 'Deaktivert. Klikk for å aktivere i tolkestyring.'}" style="width: 18px; height: 18px; margin: 0; cursor: pointer; accent-color: #4caf50; flex-shrink: 0;">
+                        <div class="lang-info-main">
+                            <div class="lang-title">
+                                <label for="toggle_${code}" style="cursor: pointer; margin: 0; font-weight: bold;">${info.name}</label> 
+                                <span style="font-size: 0.8rem; color: #888; font-weight: normal;">(${code})</span>
+                                ${!isEnabled ? '<span class="badge" style="background: rgba(255, 82, 82, 0.15); color: #ff8a80; border: 1px solid rgba(255, 82, 82, 0.4); font-size: 0.72rem;">Deaktivert</span>' : ''}
+                            </div>
+                            <div class="lang-sub">NLLB: <code>${info.nllb}</code></div>
                         </div>
-                        <div class="lang-sub">NLLB: <code>${info.nllb}</code></div>
                     </div>
                     <div class="lang-badges">
                         ${voiceBadge}
@@ -1139,6 +1361,34 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
                     </div>
                 `;
                 container.appendChild(card);
+            }
+        }
+
+        async function toggleLanguageEnabled(code, enabled) {
+            try {
+                const res = await fetch(`${apiBase()}/api/admin/toggle_language`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lang_code: code, enabled: enabled })
+                });
+
+                let data = null;
+                const text = await res.text();
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error(text || `Server svarte med status ${res.status}`);
+                }
+
+                if (!res.ok) throw new Error(data?.error || `Feil fra server (status ${res.status})`);
+
+                if (currentLanguages[code]) {
+                    currentLanguages[code].enabled = enabled;
+                }
+                renderLanguageList(currentLanguages, availableVoicesList);
+            } catch (err) {
+                alert("Feil ved endring av språkstatus: " + err.message);
+                fetchHwStatus();
             }
         }
 
@@ -1416,10 +1666,10 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
             // Oppdater infoboks hvis språket har ferdig Hugging Face stemme
             const hfNotice = document.getElementById('hfNotice');
             if (hfSupported.length === 0 || hfSupported.includes(code)) {
-                hfNotice.innerHTML = `✨ <strong>Ekte studio-stemme:</strong> Fant ekte menneskestemme for <strong>${name}</strong> på Hugging Face (Open Swara / XTTS-v2). AI-en kloner den automatisk ved lagring.`;
+                hfNotice.innerHTML = `✨ <strong>Ekte studio-stemme:</strong> Fant ekte menneskestemme for <strong>${name}</strong> på Hugging Face (Open Swara / XTTS-v2). KI-en kloner den automatisk ved lagring.`;
                 hfNotice.style.borderColor = "#4caf50";
             } else {
-                hfNotice.innerHTML = `ℹ️ <strong>Tips:</strong> For dette språket anbefales det å ta opp fra miksebordet, laste opp en egen kort lydprøve, eller velge kun teksting.`;
+                hfNotice.innerHTML = `ℹ️ <strong>Tips:</strong> Systemet fant ingen automatisk stemmeprøve for dette språket. Les inn fra miksebordet (10–15 sek), last opp en egen kort lydprøve, eller velg kun teksting på skjerm.`;
                 hfNotice.style.borderColor = "#ff9800";
             }
         }

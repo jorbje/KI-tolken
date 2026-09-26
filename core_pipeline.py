@@ -504,6 +504,54 @@ class AudioPipeline:
             self.config["audio_message"] = "Ingen mikrofon eller lydkort funnet. Sjekk tilkobling."
             return False
 
+    def get_fallback_voice_language(self, exclude_codes=None):
+        """Finner et gyldig, aktivert språk med tilgjengelig stemme for lydutgang."""
+        if exclude_codes is None:
+            exclude_codes = set()
+        elif isinstance(exclude_codes, (list, tuple)):
+            exclude_codes = set(exclude_codes)
+            
+        # 1. Kandidater: Aktiverte språk som har registrert stemmeprøve (has_voice/prompt.pt/voice_prompts)
+        voice_candidates = []
+        for code, info in self.languages.items():
+            if code in exclude_codes:
+                continue
+            if not info.get("enabled", True):
+                continue
+            folder = info.get("voice_folder", code)
+            prompt_file = os.path.join(folder, "prompt.pt")
+            has_voice = (
+                info.get("has_voice", False)
+                or code in getattr(self, "voice_prompts", {})
+                or os.path.exists(prompt_file)
+            )
+            if has_voice:
+                voice_candidates.append(code)
+                
+        # 2. Prioriter naturlige tolkespråk i rekkefølge
+        priority_order = ["en", "uk", "es", "sv", "da", "no"]
+        for p in priority_order:
+            if p in voice_candidates:
+                return p
+        if voice_candidates:
+            return voice_candidates[0]
+            
+        # 3. Hvis ingen stemmer fantes utenom exclude_codes, se etter ethvert aktivert språk som ikke er ekskludert
+        enabled_candidates = [k for k, v in self.languages.items() if v.get("enabled", True) and k not in exclude_codes]
+        for p in priority_order:
+            if p in enabled_candidates:
+                return p
+        if enabled_candidates:
+            return enabled_candidates[0]
+            
+        # 4. Hvis alle var i exclude_codes, returner første aktiverte språk
+        all_enabled = [k for k, v in self.languages.items() if v.get("enabled", True)]
+        if all_enabled:
+            return all_enabled[0]
+            
+        # 5. Siste nødutgang
+        return list(self.languages.keys())[0] if self.languages else "en"
+
     def load_settings(self):
         """Laster inn lagrede brukerinnstillinger (tolkespråk, talerspråk, kanaler) fra disk."""
         if not os.path.exists(self.settings_file):
@@ -524,28 +572,48 @@ class AudioPipeline:
                 if 1 <= ch <= 16:
                     self.config["active_tts_channels"] = ch
 
-            # Valider og overfør talerspråk (må støttes av whisper_models og nllb_langs)
+            # Valider og overfør talerspråk (må støttes av whisper_models og nllb_langs, og være aktivert)
             if "source" in saved and isinstance(saved["source"], str):
                 s = saved["source"].strip().lower()
-                if s in self.whisper_models and s in self.nllb_langs:
+                if s in self.whisper_models and s in self.nllb_langs and self.languages.get(s, {}).get("enabled", True):
                     self.config["source"] = s
+                else:
+                    avail = [k for k in self.whisper_models.keys() if k in self.languages and self.languages[k].get("enabled", True)]
+                    self.config["source"] = avail[0] if avail else "no"
 
-            # Valider og overfør tekstingsspråk (må finnes i registeret eller være 'uoversatt')
+            # Valider og overfør tekstingsspråk (må finnes i registeret og være aktivert, eller være 'uoversatt')
             if "texting" in saved and isinstance(saved["texting"], str):
                 t = saved["texting"].strip().lower()
-                if t in self.languages or t == "uoversatt":
+                if t == "uoversatt" or (t in self.languages and self.languages[t].get("enabled", True)):
                     self.config["texting"] = t
+                else:
+                    avail_text = [k for k, v in self.languages.items() if v.get("enabled", True)]
+                    self.config["texting"] = "no" if "no" in avail_text else (avail_text[0] if avail_text else "no")
 
-            # Valider og overfør tolkespråk for opptil 16 kanaler
+            # Valider og overfør tolkespråk for opptil 16 kanaler med automatisk erstatning hvis et språk er borte
+            assigned_langs = set()
+            active_channels = self.config.get("active_tts_channels", 2)
+            needs_resave = False
             for i in range(1, 17):
                 k = f"tts_ch{i}"
                 if k in saved and isinstance(saved[k], str):
                     val = saved[k].strip().lower()
-                    if val == "off" or val in self.languages:
-                        self.config[k] = val
+                    if val != "off":
+                        is_valid = (val in self.languages and self.languages[val].get("enabled", True))
+                        if is_valid:
+                            self.config[k] = val
+                            assigned_langs.add(val)
+                        else:
+                            replacement = self.get_fallback_voice_language(exclude_codes=assigned_langs | {val})
+                            print(f"[System] Lagret tolkespråk for {k} ('{val}') er deaktivert eller finnes ikke. Valgte automatisk '{replacement}'.")
+                            self.config[k] = replacement
+                            assigned_langs.add(replacement)
+                            needs_resave = True
                     else:
-                        print(f"[System] Lagret tolkespråk for {k} ('{val}') finnes ikke lenger i språkkonfigurasjonen. Settes til 'off'.")
                         self.config[k] = "off"
+
+            if needs_resave:
+                self.save_settings()
 
             active_summary = [f"Kanal {i}: {self.config[f'tts_ch{i}']}" for i in range(1, self.config['active_tts_channels'] + 1)]
             print(f"[System] Husket innstillinger fra forrige økt: Talerspråk={self.config['source']}, Teksting={self.config['texting']}, Aktive kanaler={self.config['active_tts_channels']} ({', '.join(active_summary)})")
@@ -597,11 +665,11 @@ class AudioPipeline:
             websockets.broadcast(self.connected_clients, msg)
 
     async def init_models_async(self):
-        """Laster inn AI-modeller asynkront med omfattende feilsøking og feilmeldinger."""
+        """Laster inn KI-modeller asynkront med omfattende feilsøking og feilmeldinger."""
         print("[System] Starter asynkron modellinnlasting...")
         self.config["system_status"] = "starting"
         self.config["error_title"] = "Starter tolkemotoren..."
-        self.config["error_detail"] = "Laster inn AI-modeller i minnet..."
+        self.config["error_detail"] = "Laster inn KI-modeller i minnet..."
         await self.broadcast_system_status()
 
         # 1. Sjekk diskplass
@@ -622,7 +690,7 @@ class AudioPipeline:
         if not torch.cuda.is_available():
             self.set_system_error(
                 error_type="cuda",
-                title="Skjermkortet (GPU) eller AI-driveren svarer ikke",
+                title="Skjermkortet (GPU) eller KI-driveren svarer ikke",
                 detail="NVIDIA GeForce RTX 3060 ble ikke funnet eller CUDA-driveren sviktet (DKMS-desynk). Sjekk PCIe-strømkabel eller restart maskinen."
             )
             return
@@ -1274,9 +1342,11 @@ class AudioPipeline:
         status_data = dict(self.config)
         for code, info in self.languages.items():
             info["has_voice"] = (code in self.voice_prompts)
+            if "enabled" not in info:
+                info["enabled"] = True
         status_data["languages"] = self.languages
-        status_data["available_voices"] = list(dict.fromkeys(list(self.voice_prompts.keys())))
-        status_data["available_languages"] = list(self.languages.keys())
+        status_data["available_voices"] = list(dict.fromkeys([k for k in self.voice_prompts.keys() if self.languages.get(k, {}).get("enabled", True)]))
+        status_data["available_languages"] = [k for k, v in self.languages.items() if v.get("enabled", True)]
         status_data["hf_supported_languages"] = list(HF_VOICE_SAMPLES.keys())
         if getattr(self, "multitrack_recorder", None):
             status_data["recording"] = self.multitrack_recorder.get_status()
@@ -1290,6 +1360,22 @@ class AudioPipeline:
         
         gyldige_kategorier = ["source", "texting"] + [f"tts_ch{i}" for i in range(1, 17)]
         if category in gyldige_kategorier:
+            # Sikre at hvis et deaktivert eller ukjent språk forespørres, faller vi automatisk tilbake til et gyldig språk
+            if category.startswith("tts_ch") and lang != "off":
+                if lang not in self.languages or not self.languages[lang].get("enabled", True):
+                    assigned = {self.config.get(f"tts_ch{j}") for j in range(1, 17) if f"tts_ch{j}" != category and self.config.get(f"tts_ch{j}") != "off"}
+                    fallback = self.get_fallback_voice_language(exclude_codes=assigned | {lang})
+                    print(f"[API] Språk '{lang}' er ikke tilgjengelig for {category}. Bytter automatisk til '{fallback}'.")
+                    lang = fallback
+            elif category == "texting" and lang != "uoversatt":
+                if lang not in self.languages or not self.languages[lang].get("enabled", True):
+                    active_langs = [k for k, v in self.languages.items() if v.get("enabled", True)]
+                    lang = "no" if "no" in active_langs else (active_langs[0] if active_langs else "no")
+            elif category == "source":
+                if lang not in self.whisper_models or (lang in self.languages and not self.languages[lang].get("enabled", True)):
+                    avail = [k for k in self.whisper_models.keys() if k in self.languages and self.languages[k].get("enabled", True)]
+                    lang = avail[0] if avail else "no"
+
             gammel_lang = self.config[category]
             if gammel_lang != lang:
                 print(f"[API] Laster inn modell for: {category} -> {lang}. Venter på VRAM...")
@@ -1823,26 +1909,36 @@ class AudioPipeline:
                 del self.voice_prompts[lang_code]
                 
             # Tilbakestill aktive valg dersom det slettede språket var i bruk
-            remaining_langs = list(self.languages.keys())
+            remaining_langs = [k for k, v in self.languages.items() if v.get("enabled", True)] or list(self.languages.keys())
             fallback_lang = "no" if "no" in remaining_langs else remaining_langs[0]
             
             if self.config.get("texting") == lang_code:
                 self.config["texting"] = fallback_lang
                 print(f"[Admin] Teksting var satt til slettet språk '{lang_code}', tilbakestilt til '{fallback_lang}'.")
                 
+            # Samle inn språk som allerede er i bruk på de andre kanalene
+            assigned = set()
+            for j in range(1, 17):
+                k = f"tts_ch{j}"
+                val = self.config.get(k, "off")
+                if val != "off" and val != lang_code:
+                    assigned.add(val)
+
             for i in range(1, 17):
                 ch_key = f"tts_ch{i}"
                 if self.config.get(ch_key) == lang_code:
-                    self.config[ch_key] = "off"
-                    print(f"[Admin] TTS-kanal {i} var satt til slettet språk '{lang_code}', slått av.")
+                    replacement = self.get_fallback_voice_language(exclude_codes=assigned | {lang_code})
+                    self.config[ch_key] = replacement
+                    assigned.add(replacement)
+                    print(f"[Admin] TTS-kanal {i} var satt til slettet språk '{lang_code}'. Nytt språk automatisk valgt: '{replacement}'.")
                     
             if self.config.get("source") == lang_code:
                 avail_whisper = [k for k in self.whisper_models.keys() if k in remaining_langs]
-                if avail_whisper:
-                    self.config["source"] = avail_whisper[0]
-                elif "no" in self.whisper_models:
-                    self.config["source"] = "no"
-                print(f"[Admin] Talerspråk var satt til slettet språk '{lang_code}', tilbakestilt til '{self.config['source']}'.")
+                new_source = avail_whisper[0] if avail_whisper else ("no" if "no" in self.whisper_models else "en")
+                if hasattr(self, "swap_models") and self.models_ready:
+                    await self.swap_models("source", new_source)
+                self.config["source"] = new_source
+                print(f"[Admin] Talerspråk var satt til slettet språk '{lang_code}', tilbakestilt til '{new_source}'.")
                 
             with open("sprak_konfig.json", "w", encoding="utf-8") as f:
                 json.dump(self.languages, f, indent=2, ensure_ascii=False)
@@ -1856,6 +1952,72 @@ class AudioPipeline:
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500, headers=self._API_HEADERS)
 
+    async def api_toggle_language_handler(self, request):
+        """REST API (Admin): Slår et språk av eller på for kontrollpanelet uten å slette det."""
+        try:
+            data = await request.json()
+            lang_code = data.get("lang_code", "").strip().lower()
+            enabled = bool(data.get("enabled", True))
+            
+            if not lang_code or lang_code not in self.languages:
+                return web.json_response({"error": "Språket finnes ikke"}, status=400, headers=self._API_HEADERS)
+                
+            # Sikre at vi ikke deaktiverer det siste gjenværende aktive språket
+            if not enabled:
+                currently_enabled = [k for k, v in self.languages.items() if v.get("enabled", True) and k != lang_code]
+                if not currently_enabled:
+                    return web.json_response({
+                        "error": "Du kan ikke slå av alle språk. Minst ett språk må være aktivt for tolkestyring."
+                    }, status=400, headers=self._API_HEADERS)
+
+            self.languages[lang_code]["enabled"] = enabled
+            
+            # Hvis språket deaktiveres mens det er aktivt i bruk, velg et annet aktivt språk
+            if not enabled:
+                remaining_active = [k for k, v in self.languages.items() if v.get("enabled", True)]
+                fallback_lang = "no" if "no" in remaining_active else (remaining_active[0] if remaining_active else "no")
+                
+                if self.config.get("texting") == lang_code:
+                    self.config["texting"] = fallback_lang
+                    print(f"[Admin] Teksting var satt til deaktivert språk '{lang_code}', tilbakestilt til '{fallback_lang}'.")
+                    
+                # Samle inn språk som allerede er i bruk på de andre kanalene
+                assigned = set()
+                for j in range(1, 17):
+                    k = f"tts_ch{j}"
+                    val = self.config.get(k, "off")
+                    if val != "off" and val != lang_code:
+                        assigned.add(val)
+
+                for i in range(1, 17):
+                    ch_key = f"tts_ch{i}"
+                    if self.config.get(ch_key) == lang_code:
+                        replacement = self.get_fallback_voice_language(exclude_codes=assigned | {lang_code})
+                        self.config[ch_key] = replacement
+                        assigned.add(replacement)
+                        print(f"[Admin] TTS-kanal {i} var satt til deaktivert språk '{lang_code}'. Nytt språk automatisk valgt: '{replacement}'.")
+                        
+                if self.config.get("source") == lang_code:
+                    avail_whisper = [k for k in self.whisper_models.keys() if k in remaining_active]
+                    new_source = avail_whisper[0] if avail_whisper else ("no" if "no" in self.whisper_models else "en")
+                    if hasattr(self, "swap_models") and self.models_ready:
+                        await self.swap_models("source", new_source)
+                    self.config["source"] = new_source
+                    print(f"[Admin] Talerspråk var satt til deaktivert språk '{lang_code}', tilbakestilt til '{new_source}'.")
+                    
+            with open("sprak_konfig.json", "w", encoding="utf-8") as f:
+                json.dump(self.languages, f, indent=2, ensure_ascii=False)
+                
+            self.save_settings()
+            status_str = "aktivert" if enabled else "deaktivert"
+            print(f"[Admin] Språk '{lang_code}' ble {status_str} for tolkestyring.")
+            if hasattr(self, "connected_clients") and self.connected_clients:
+                await self.broadcast_system_status()
+                
+            return web.json_response({"status": "success", "lang_code": lang_code, "enabled": enabled}, headers=self._API_HEADERS)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500, headers=self._API_HEADERS)
+
     async def run_api_server(self):
         """Tråd 6: Kjører REST API på port 8080 for ekstern kontroll."""
         app = web.Application()
@@ -1866,6 +2028,7 @@ class AudioPipeline:
         # Admin endpoints
         app.router.add_post('/api/admin/add_language', self.api_add_language_handler)
         app.router.add_post('/api/admin/delete_language', self.api_delete_language_handler)
+        app.router.add_post('/api/admin/toggle_language', self.api_toggle_language_handler)
         app.router.add_post('/api/admin/upload_voice', self.api_upload_voice_handler)
         app.router.add_post('/api/admin/set_hw_channels', self.api_set_hw_channels_handler)
         app.router.add_post('/api/admin/start_mixer_recording', self.api_start_mixer_recording_handler)

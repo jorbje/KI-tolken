@@ -4,48 +4,55 @@
     "nllb": "nob_Latn",
     "tts_lang": "en",
     "voice_folder": "Norsk_stemme_kvinne",
-    "has_voice": true
+    "has_voice": true,
+    "enabled": true
   },
   "en": {
     "name": "Engelsk",
     "nllb": "eng_Latn",
     "tts_lang": "en",
     "voice_folder": "engelsk",
-    "has_voice": true
+    "has_voice": true,
+    "enabled": true
   },
   "sv": {
     "name": "Svensk",
     "nllb": "swe_Latn",
     "tts_lang": "en",
     "voice_folder": "svensk",
-    "has_voice": true
+    "has_voice": true,
+    "enabled": true
   },
   "da": {
     "name": "Dansk",
     "nllb": "dan_Latn",
     "tts_lang": "da",
     "voice_folder": "dansk",
-    "has_voice": true
+    "has_voice": true,
+    "enabled": true
   },
   "uk": {
     "name": "Ukrainsk",
     "nllb": "ukr_Cyrl",
     "tts_lang": "uk",
     "voice_folder": "ukrainsk",
-    "has_voice": true
+    "has_voice": true,
+    "enabled": true
   },
   "es": {
     "name": "Spansk",
     "nllb": "spa_Latn",
     "tts_lang": "es",
     "voice_folder": "spansk",
-    "has_voice": true
+    "has_voice": true,
+    "enabled": true
   },
   "ru": {
     "name": "Russisk",
     "nllb": "rus_Cyrl",
     "tts_lang": "en",
     "voice_folder": "ru",
-    "has_voice": true
+    "has_voice": true,
+    "enabled": true
   }
 }
