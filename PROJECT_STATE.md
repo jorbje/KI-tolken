@@ -22,8 +22,8 @@ Systemet er delt inn i tre hovedfiler:
     * Garanterer korrekt teologisk terminologi uten hallusinasjoner ved hjelp av Maskert Oversettelse (Named Entity Masking) via `oversettelse_ordliste.json`.
     * Dynamisk adminpanel tillater live-opptak av nye stemmeprøver rett fra miksebord, auto-kloning, multispors WAV-opptak (Tale+Tolk), og ubegrenset sletting/tilføying av språk via FLORES-200 koder.
     * Alle konfigurasjoner (kanaler, tolkespråk) lagres nå persistent i `system_innstillinger.json` (automatisk state-sync ved omstart).
-    * Klargjort for åpen distribusjon via GitHub (`https://github.com/jorbje/KI-tolken`): Skreddersydd `.gitignore` opprettet, installasjonsskript oppdatert med riktig GitHub-URL, og en minimalistisk installasjonspakke (`Oppsett_KI-Tolken.zip`) er klargjort for GitHub Releases slik at vanlige brukere slipper å laste ned hele kildekoden lokalt.
-*   **Neste steg:** Pushe prosjektet til GitHub og opprette en Release med zip-pakken. Fremtidig mål: Bytte til ekte GPU-batching av lydkanaler i OmniVoice i stedet for Python-tråder for å kunne støtte enda flere språk på samme GPU uten "gummistrikk-effekt".
+    * Publisert og pushet til GitHub (`https://github.com/jorbje/KI-tolken`): Kildekode og installasjonsskript er opplastet. Skript og dokumentasjon spesifiserer nå tydelig krav om minst 8 GB minnepenn, og oppsettspakken `Oppsett_KI-Tolken.zip` er klargjort for GitHub Release.
+*   **Neste steg:** Opprette Release v1.0.0 på GitHub og laste opp `Oppsett_KI-Tolken.zip`. Fremtidig mål: Bytte til ekte GPU-batching av lydkanaler i OmniVoice i stedet for Python-tråder for å kunne støtte enda flere språk på samme GPU uten "gummistrikk-effekt".
 
 # Kjente feil og blindveier (Hva som IKKE fungerer)
 *   **Edge TTS (Personvern/Sikkerhet):** Brøt med kravet om 100 % lokal prosessering. Sendte tekst til Microsofts servere. Forlatt og byttet ut med OmniVoice av sikkerhetshensyn.
