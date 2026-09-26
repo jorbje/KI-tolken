@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KI-Tolken - Toppjustert med Auto-skjuling</title>
+    <style>
+        body {
+            background-color: black;
+            color: #FFFF00;
+            font-family: Arial, sans-serif;
+            font-size: 60px; /* Standardstørrelse for mobiltelefoner */
+            font-weight: bold;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 8%;
+            box-sizing: border-box;
+            overflow: hidden;
+            word-wrap: break-word; /* Sikrer at lange ord brytes pent */
+            cursor: pointer; /* Viser at skjermen kan trykkes på */
+        }
+
+        /* Hvis skjermen er bredere enn 800px (PC/Nettbrett), bruk 80px */
+        @media (min-width: 800px) {
+            body {
+                font-size: 80px;
+            }
+        }
+
+        #subtitle-box {
+            text-align: center;
+            text-shadow: 4px 4px 8px #000000;
+            transition: opacity 0.3s ease-in-out; 
+            max-width: 90%;
+            opacity: 0;
+            z-index: 10;
+        }
+
+        #fullscreen-hint {
+            position: absolute;
+            bottom: 20px;
+            color: #555555;
+            font-size: 16px;
+            font-weight: normal;
+            text-align: center;
+            width: 100%;
+            pointer-events: none; /* Gjør at trykk går gjennom teksten */
+            transition: opacity 0.5s;
+        }
+
+        /* Advarsel for manglende lydkort / mikrofon */
+        #hardware-alert {
+            position: fixed;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(40, 10, 10, 0.95);
+            border: 3px solid #ff4444;
+            color: #ffffff;
+            padding: 24px 36px;
+            border-radius: 16px;
+            text-align: center;
+            z-index: 200;
+            max-width: 90%;
+            width: 800px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+            box-sizing: border-box;
+            display: none;
+        }
+        #hardware-alert .alert-icon {
+            font-size: 50px;
+            line-height: 1;
+            margin-bottom: 12px;
+        }
+        #hardware-alert .alert-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #ff5252;
+            margin-bottom: 10px;
+        }
+        #hardware-alert .alert-desc {
+            font-size: 22px;
+            color: #e0e0e0;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+        #hardware-alert .alert-contact {
+            background-color: rgba(255, 255, 255, 0.12);
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 22px;
+            color: #ffff00;
+        }
+        @media (max-width: 768px) {
+            #hardware-alert {
+                width: 92%;
+                top: 20px;
+                padding: 16px 20px;
+            }
+            #hardware-alert .alert-icon { font-size: 36px; }
+            #hardware-alert .alert-title { font-size: 22px; }
+            #hardware-alert .alert-desc { font-size: 16px; }
+            #hardware-alert .alert-contact { font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="hardware-alert">
+        <div class="alert-icon" id="alert-icon">⚠️</div>
+        <div class="alert-title" id="alert-title">Lydkort / mikrofon er ikke tilkoblet</div>
+        <div class="alert-desc" id="alert-desc">Systemet hører ikke hva som blir sagt, og undertekster er midlertidig utilgjengelig.</div>
+        <div class="alert-contact" id="alert-contact">📞 Kontakt <strong>Jørgen Bjerke</strong> på tlf. <strong>99 64 77 50</strong></div>
+    </div>
+    <div id="subtitle-box"></div>
+    <div id="fullscreen-hint">Trykk hvor som helst for fullskjerm</div>
+
+    <script>
+        const box = document.getElementById('subtitle-box');
+        const hint = document.getElementById('fullscreen-hint');
+
+        // Fullskjerm-logikk
+        document.body.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Feil ved forsøk på fullskjerm: ${err.message}`);
+                });
+                hint.style.opacity = 0; // Skjul hintet når fullskjerm aktiveres
+            } else {
+                document.exitFullscreen();
+                hint.style.opacity = 1; // Vis hintet igjen hvis de går ut av fullskjerm
+            }
+        });
+        
+        let ws;
+        let queue = [];
+        let isDisplaying = false;
+        let dvaleTimer;
+
+        let systemState = { status: "ready", title: "", detail: "", error_type: "none" };
+        let audioState = { status: "ok" };
+
+        function updateScreenAlert() {
+            const alertEl = document.getElementById('hardware-alert');
+            const alertIcon = document.getElementById('alert-icon');
+            const alertTitle = document.getElementById('alert-title');
+            const alertDesc = document.getElementById('alert-desc');
+            const alertContact = document.getElementById('alert-contact');
+
+            if (systemState.status === "error") {
+                alertEl.style.display = "block";
+                alertEl.style.borderColor = "#ff4444";
+                alertIcon.textContent = "⚠️";
+                alertTitle.textContent = systemState.title || "Teknisk feil i tolkemotoren";
+                alertDesc.textContent = "Systemet kan ikke tolke for øyeblikket. Undertekster er midlertidig utilgjengelig.";
+                alertContact.style.display = "inline-block";
+            } else if (audioState.status === "missing") {
+                alertEl.style.display = "block";
+                alertEl.style.borderColor = "#ff4444";
+                alertIcon.textContent = "⚠️";
+                alertTitle.textContent = "Lydkort / mikrofon er ikke tilkoblet";
+                alertDesc.textContent = "Systemet hører ikke hva som blir sagt, og undertekster er midlertidig utilgjengelig.";
+                alertContact.style.display = "inline-block";
+            } else if (systemState.status === "starting") {
+                alertEl.style.display = "block";
+                alertEl.style.borderColor = "#ffb300";
+                alertIcon.textContent = "⏳";
+                alertTitle.textContent = "Tolken starter opp...";
+                alertDesc.textContent = "Laster inn AI-språkmodeller i minnet. Vennligst vent et lite øyeblikk.";
+                alertContact.style.display = "none";
+            } else {
+                alertEl.style.display = "none";
+            }
+        }
+
+        // Pakker tilkoblingen inn i en funksjon så vi kan kalle den på nytt ved brudd
+        function connectWebSocket() {
+            // Bruker automatisk maskinens IP i stedet for 'localhost'
+            const wsUrl = `ws://${window.location.hostname}:8765`;
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = function() {
+                // Tilbakestill til normal styling hvis vi kommer fra en feilmelding
+                box.style.color = "#FFFF00";
+                box.style.fontSize = ""; // Fjerner JS-overstyring slik at CSS (120px) gjelder
+                if (box.textContent === "Mistet forbindelsen. Prøver å koble til på nytt...") {
+                    box.textContent = "";
+                    box.style.opacity = 0;
+                }
+            };
+
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                if (data.type === "system_status") {
+                    systemState = data;
+                    updateScreenAlert();
+                    return;
+                }
+                if (data.type === "audio_status") {
+                    audioState = data;
+                    updateScreenAlert();
+                    return;
+                }
+                if (data.text) {
+                    queue.push(data.text);
+                    processQueue();
+                }
+            };
+
+            ws.onclose = function() {
+                // Diskret, grå og mindre feilmelding
+                box.style.color = "#555555";
+                box.style.fontSize = "40px"; // Fast størrelse i stedet for vw
+                box.textContent = "Mistet forbindelsen. Prøver å koble til på nytt...";
+                box.style.opacity = 1;
+                
+                // Prøv automatisk på nytt etter 3 sekunder
+                setTimeout(connectWebSocket, 3000);
+            };
+
+            ws.onerror = function(error) {
+                ws.close(); // Tvinger kjøring av onclose for å starte gjenoppkobling
+            };
+        }
+
+        function processQueue() {
+            clearTimeout(dvaleTimer);
+
+            if (isDisplaying || queue.length === 0) {
+                if (!isDisplaying && queue.length === 0 && box.textContent !== "" && !box.textContent.includes("Mistet forbindelsen")) {
+                    dvaleTimer = setTimeout(() => {
+                        box.style.opacity = 0; 
+                    }, 10000); 
+                }
+                return;
+            }
+            
+            isDisplaying = true;
+            let currentText = queue.shift();
+            
+            // Slå sammen flere småbiter aggressivt hvis køen bygger seg opp
+            while (queue.length > 0 && currentText.split(" ").length < 30) { // Økt fra 15 til 30 ord!
+                currentText += " " + queue.shift();
+            }
+            
+            const timePerChar = 70;
+            let displayTime = Math.max(1200, Math.min(4000, currentText.length * timePerChar));
+            let fadeDelay = 200;
+            
+            // PANIKK-MODUS: Hvis det fortsatt er ting i køen, kutt all ventetid for å hente inn forsinkelsen!
+            if (queue.length > 0) {
+                displayTime = Math.max(800, currentText.length * 35); // Enda kortere visningstid
+                fadeDelay = 0; // Dropp animasjons-forsinkelsen HELT (0 ms)
+            }
+
+            box.style.opacity = 0;
+            
+            setTimeout(() => {
+                box.textContent = currentText;
+                box.style.opacity = 1;
+                
+                setTimeout(() => {
+                    isDisplaying = false;
+                    processQueue(); 
+                }, displayTime); 
+            }, fadeDelay); 
+        }
+
+        // Start tilkoblingen når siden lastes
+        connectWebSocket();
+    </script>
+</body>
+</html>

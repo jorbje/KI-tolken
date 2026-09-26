@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>KI-Tolken Kontrollpanel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 80px
+        }
+
+        h1 { margin-bottom: 30px; font-size: 2rem; text-align: center; }
+        
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+        .panel {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .panel h2 {
+            font-size: 1.3rem;
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .radio-label {
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 5px 0;
+        }
+        .radio-label input {
+            margin-right: 15px;
+            transform: scale(1.5);
+            cursor: pointer;
+        }
+        #status-log {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            font-size: 1.1rem;
+            color: #4caf50;
+            text-align: center;
+            padding: 15px;
+            background-color: #1e1e1e;
+            border-top: 2px solid #333;
+            box-sizing: border-box;
+            transition: color 0.3s;
+            z-index: 1000;
+        }
+
+        /* MAGIEN FOR MOBILTELEFONER */
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr; /* Stabler alt i én lang kolonne */
+            }
+            .radio-label {
+                padding: 10px 0; /* Litt mer avstand for pølsefingre */
+            }
+        }
+
+        /* Laste-animasjon (Uendelig bar) */
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background-color: #333;
+            margin-top: 10px;
+            overflow: hidden;
+            display: none;
+            border-radius: 2px;
+        }
+        .progress-bar {
+            width: 30%;
+            height: 100%;
+            background-color: #4caf50;
+            animation: indeterminate 1.5s infinite linear;
+        }
+        @keyframes indeterminate {
+            0% { transform: translateX(-100%); width: 30%; }
+            50% { width: 60%; }
+            100% { transform: translateX(400%); width: 30%; }
+        }
+
+        /* Overordnet System- og Maskinvaredashboard */
+        .status-dashboard {
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .dashboard-box {
+            border-radius: 12px;
+            padding: 14px 20px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border: 2px solid;
+            transition: all 0.3s ease;
+        }
+        .status-starting {
+            background: rgba(255, 179, 0, 0.15);
+            border-color: #ffb300;
+            color: #fff8e1;
+        }
+        .status-ready {
+            background: rgba(46, 125, 50, 0.18);
+            border-color: #4caf50;
+            color: #e8f5e9;
+        }
+        .status-error {
+            background: linear-gradient(135deg, rgba(183, 28, 28, 0.6), rgba(211, 47, 47, 0.5));
+            border-color: #ff5252;
+            color: #ffebee;
+            box-shadow: 0 4px 15px rgba(211, 47, 47, 0.3);
+        }
+        .audio-ok {
+            background: rgba(46, 125, 50, 0.18);
+            border-color: #4caf50;
+            color: #e8f5e9;
+        }
+        .audio-missing {
+            background: linear-gradient(135deg, rgba(183, 28, 28, 0.6), rgba(211, 47, 47, 0.5));
+            border-color: #ff5252;
+            color: #ffebee;
+            box-shadow: 0 4px 15px rgba(211, 47, 47, 0.3);
+        }
+        .status-icon {
+            font-size: 2.2rem;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .status-content {
+            flex: 1;
+        }
+        .status-title {
+            font-size: 1.15rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .status-desc {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+        .tech-details {
+            background: rgba(0, 0, 0, 0.45);
+            border-left: 3px solid #ff5252;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: Consolas, monospace;
+            font-size: 0.9rem;
+            margin-top: 8px;
+            color: #ffcdd2;
+            word-break: break-word;
+        }
+        .retry-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .retry-btn:hover { background-color: #d32f2f; }
+        
+        /* VU-meter for mikrofon */
+        .vu-container {
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .vu-label {
+            font-size: 0.85rem;
+            color: #c8e6c9;
+        }
+        .vu-track {
+            background: #2a2a2a;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            width: 100%;
+            max-width: 320px;
+            border: 1px solid #444;
+        }
+        .vu-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #4caf50 60%, #ffeb3b 85%, #f44336 100%);
+            transition: width 0.1s ease-out;
+        }
+        .contact-banner {
+            background-color: rgba(30, 30, 30, 0.8);
+            border: 1px solid #555;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1rem;
+            color: #ffff8d;
+        }
+        .contact-banner a {
+            color: #ffff8d;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tolkestyring</h1>
+
+    <!-- Live opptaks-indikator -->
+    <div id="recordingLiveBadge" style="display: none; background: #c62828; color: white; padding: 7px 14px; border-radius: 20px; font-weight: bold; font-size: 0.85rem; margin-bottom: 15px; text-align: center; border: 1px solid #ff5252; box-shadow: 0 0 10px rgba(255,82,82,0.4);">
+        <span style="display: inline-block; width: 10px; height: 10px; background: #ff1744; border-radius: 50%; margin-right: 6px; box-shadow: 0 0 8px #ff1744; animation: blinkRec 1s ease-in-out infinite alternate;"></span>
+        🔴 FLERSPORSOPPTAK PÅGÅR (<span id="recTimerKontroll">00:00</span>)
+    </div>
+    
+    <!-- Overordnet System & Maskinvare-status -->
+    <div id="status-dashboard" class="status-dashboard">
+        <!-- Boks 1: Tolkemotor / GPU / Minne / Disk -->
+        <div id="system-status-box" class="dashboard-box status-starting">
+            <div class="status-icon" id="sys-status-icon">⏳</div>
+            <div class="status-content">
+                <div class="status-title" id="sys-status-title">Starter tolkemotoren...</div>
+                <div class="status-desc" id="sys-status-desc">Laster inn AI-modeller i minnet. Vennligst vent.</div>
+                <div id="sys-tech-details" class="tech-details" style="display: none;">
+                    <strong>Teknisk diagnose:</strong> <span id="sys-tech-text"></span>
+                </div>
+            </div>
+            <div id="sys-error-actions" style="display: none;">
+                <button class="retry-btn" onclick="restartSystem()">Start på nytt</button>
+            </div>
+        </div>
+
+        <!-- Boks 2: Lydkort & Mikrofonstatus + VU-meter -->
+        <div id="audio-status-box" class="dashboard-box audio-missing">
+            <div class="status-icon" id="audio-status-icon">⚠️</div>
+            <div class="status-content">
+                <div class="status-title" id="audio-status-title">Lydkort / mikrofon er ikke tilkoblet!</div>
+                <div class="status-desc" id="audio-status-desc">Sjekk USB-kabelen til Audient iD4.</div>
+                <!-- VU-meter for live lydnivå -->
+                <div id="vu-meter-container" class="vu-container" style="display: none;">
+                    <div class="vu-label">Mikrofonsignal: <strong id="vu-text">Stille</strong></div>
+                    <div class="vu-track">
+                        <div id="vu-bar" class="vu-bar" style="width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kontaktvarsel ved feil -->
+        <div id="contact-banner" class="contact-banner" style="display: none;">
+            📞 Problemer med systemet? Kontakt <strong>Jørgen Bjerke</strong> på tlf. <a href="tel:99647750">99 64 77 50</a>
+        </div>
+    </div>
+    
+    <div class="grid-container">
+        <div class="panel">
+            <h2>Hvem snakker nå? (Inn)</h2>
+            <div class="radio-group">
+                <label class="radio-label"><input type="radio" name="source" value="no" checked onchange="setLanguage('source', this.value)"> Norsk</label>
+                <label class="radio-label"><input type="radio" name="source" value="sv" onchange="setLanguage('source', this.value)"> Svensk</label>
+                <label class="radio-label"><input type="radio" name="source" value="da" onchange="setLanguage('source', this.value)"> Dansk</label>
+                <label class="radio-label"><input type="radio" name="source" value="en" onchange="setLanguage('source', this.value)"> Engelsk</label>
+            </div>
+        </div>
+
+        <div id="dynamic-tts-channels" style="display: contents;"></div>
+
+        <div class="panel">
+            <h2>Teksting på skjerm</h2>
+            <div class="radio-group" id="dynamic-texting-group">
+                <label class="radio-label"><input type="radio" name="texting" value="no" checked onchange="setLanguage('texting', this.value)"> Norsk</label>
+                <label class="radio-label"><input type="radio" name="texting" value="sv" onchange="setLanguage('texting', this.value)"> Svensk</label>
+                <label class="radio-label"><input type="radio" name="texting" value="da" onchange="setLanguage('texting', this.value)"> Dansk</label>
+                <label class="radio-label"><input type="radio" name="texting" value="en" onchange="setLanguage('texting', this.value)"> Engelsk</label>
+            </div>
+            <div style="margin-top: 10px; font-size: 0.9rem; text-align: center; color: #aaa;">
+                (For hørselshemmede)
+            </div>
+            
+            <!-- NYTT: Restart-knapp -->
+            <h2 style="margin-top: 30px; border-bottom-color: #f44336;">Systemvedlikehold</h2>
+            <button onclick="restartSystem()" style="width: 100%; padding: 15px; background-color: #f44336; color: white; border: none; border-radius: 8px; font-size: 1.2rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: background-color 0.3s;">
+                ⚠️ Start Tolkemaskinen på nytt
+            </button>
+        </div>
+    </div>
+
+    <div id="status-log">
+        <span id="status-text">Systemet er klart. Velg et språk over.</span>
+        <div class="progress-container" id="progress-container"><div class="progress-bar"></div></div>
+    </div>
+
+    <script>
+        // Ordbøker for å gjøre system-koder om til vanlig norsk
+        const norskeNavn = {
+            'source': 'Talerens språk',
+            'tts_ch1': 'Lydkanal 1',
+            'tts_ch2': 'Lydkanal 2',
+            'texting': 'Teksting',
+            'no': 'norsk',
+            'sv': 'svensk',
+            'da': 'dansk',
+            'en': 'engelsk',
+            'uk': 'ukrainsk',
+            'es': 'spansk',
+            'uoversatt': 'uoversatt kildespråk',
+            'off': 'slått av'
+        };
+
+        let isUpdating = false; // NY LÅS FOR Å HINDRE GUMMISTRIKK-EFFEKT
+
+        async function setLanguage(category, lang) {
+            isUpdating = true; // Skru på låsen
+            const statusText = document.getElementById('status-text');
+            const statusLog = document.getElementById('status-log');
+            const kategoriNorsk = norskeNavn[category] || category;
+            const spraakNorsk = norskeNavn[lang] || lang;
+            
+            statusLog.style.color = "#ffeb3b"; // Gul mens den jobber
+            statusText.textContent = `Gjør klar for å bytte ${kategoriNorsk} til ${spraakNorsk}... vent litt.`;
+
+            try {
+                const response = await fetch(`${apiBase()}/api/set/${category}/${lang}`, { cache: 'no-store' });
+                const data = await response.json();
+
+                if (response.ok && data.status === "success") {
+                    statusLog.style.color = "#4caf50"; // Grønn ved suksess
+                    statusText.textContent = `Vellykket! ${kategoriNorsk} er nå ${spraakNorsk}.`;
+                } else {
+                    statusLog.style.color = "#f44336"; // Rød ved feil
+                    statusText.textContent = "Det oppstod en feil under byttet.";
+                }
+            } catch (error) {
+                statusLog.style.color = "#f44336";
+                statusText.textContent = "Mistet kontakt med hjernen (Tolkemaskinen). Er den slått av?";
+            } finally {
+                isUpdating = false; // Skru av låsen uansett om det gikk bra eller dårlig
+            }
+        }
+
+        // Auto-reconnect og toveis synkronisering: Sjekker kontinuerlig.
+        let wasOffline = false;
+
+        const apiBase = () => {
+            const h = window.location.hostname || 'localhost';
+            return `http://${h}:8080`;
+        };
+
+        /** Safari håndterer ofte XHR bedre enn fetch når tilkoblingen har vært nede. */
+        function xhrGet(url) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', url, true);
+                xhr.timeout = 12000;
+                xhr.setRequestHeader('Cache-Control', 'no-cache');
+                xhr.onload = function () {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        resolve(xhr.responseText);
+                    } else {
+                        reject(new Error('HTTP ' + xhr.status));
+                    }
+                };
+                xhr.onerror = function () { reject(new Error('network')); };
+                xhr.ontimeout = function () { reject(new Error('timeout')); };
+                xhr.send();
+            });
+        }
+
+        function applyConfigFromJson(config) {
+            for (const [category, lang] of Object.entries(config)) {
+                const radio = document.querySelector(`input[name="${category}"][value="${lang}"]`);
+                if (radio && !radio.checked) {
+                    radio.checked = true;
+                }
+            }
+
+            // Håndter flersporsopptak-indikator
+            const badge = document.getElementById('recordingLiveBadge');
+            const timerSpan = document.getElementById('recTimerKontroll');
+            if (badge && config.recording) {
+                if (config.recording.is_recording) {
+                    badge.style.display = 'block';
+                    if (timerSpan) timerSpan.innerText = config.recording.elapsed_formatted || "PÅ";
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+
+        let renderedChannels = 0;
+        let renderedVoices = "";
+        let renderedTextingLangs = "";
+
+        function renderTextingOptions(config) {
+            const langs = config.languages ? Object.keys(config.languages) : (config.available_languages || ["no", "sv", "da", "en"]);
+            const langsStr = langs.join(",");
+            if (langsStr === renderedTextingLangs) return;
+
+            const container = document.getElementById('dynamic-texting-group');
+            if (!container) return;
+            container.innerHTML = "";
+
+            for (const code of langs) {
+                const disp = norskeNavn[code] || (config.languages && config.languages[code] ? config.languages[code].name : code);
+                const label = document.createElement('label');
+                label.className = 'radio-label';
+                label.innerHTML = `<input type="radio" name="texting" value="${code}" onchange="setLanguage('texting', this.value)"> ${disp}`;
+                container.appendChild(label);
+            }
+            renderedTextingLangs = langsStr;
+        }
+
+        function renderTtsChannels(config) {
+            const activeChannels = config.active_tts_channels || 2;
+            const availableVoices = config.available_voices || ["no", "sv", "da", "en", "uk", "es"];
+            const voicesStr = availableVoices.join(",");
+            
+            // Re-render kun hvis antall kanaler eller tilgjengelige stemmer er endret
+            if (activeChannels === renderedChannels && voicesStr === renderedVoices) return;
+            
+            const container = document.getElementById('dynamic-tts-channels');
+            container.innerHTML = "";
+            
+            for (let i = 1; i <= activeChannels; i++) {
+                const panel = document.createElement('div');
+                panel.className = 'panel';
+                let html = `<h2>Lydkanal ${i} (Øreplugg)</h2><div class="radio-group">`;
+                html += `<label class="radio-label"><input type="radio" name="tts_ch${i}" value="off" onchange="setLanguage('tts_ch${i}', this.value)"> Av</label>`;
+                
+                for (const v of availableVoices) {
+                    const disp = norskeNavn[v] || (config.languages && config.languages[v] ? config.languages[v].name : v);
+                    html += `<label class="radio-label"><input type="radio" name="tts_ch${i}" value="${v}" onchange="setLanguage('tts_ch${i}', this.value)"> ${disp}</label>`;
+                }
+                
+                html += `</div>`;
+                panel.innerHTML = html;
+                container.appendChild(panel);
+                norskeNavn[`tts_ch${i}`] = `Lydkanal ${i}`;
+            }
+            
+            renderedChannels = activeChannels;
+            renderedVoices = voicesStr;
+        }
+
+        async function syncStatus() {
+            if (isUpdating) return; // Avbryt synkronisering hvis vi holder på å bytte språk!
+
+            try {
+                const text = await xhrGet(`${apiBase()}/api/status?_=${Date.now()}`);
+                const statusLog = document.getElementById('status-log');
+                const statusText = document.getElementById('status-text');
+                if (wasOffline) {
+                    wasOffline = false;
+                    statusLog.style.color = "#4caf50";
+                    statusText.textContent = "Tilkoblet igjen.";
+                }
+                const config = JSON.parse(text);
+                if (config.languages) {
+                    for (const [code, info] of Object.entries(config.languages)) {
+                        norskeNavn[code] = info.name || code;
+                    }
+                }
+                renderTextingOptions(config);
+                renderTtsChannels(config);
+                applyConfigFromJson(config);
+
+                // --- Oppdater System- og Modulstatus ---
+                const sysBox = document.getElementById('system-status-box');
+                const sysIcon = document.getElementById('sys-status-icon');
+                const sysTitle = document.getElementById('sys-status-title');
+                const sysDesc = document.getElementById('sys-status-desc');
+                const sysTech = document.getElementById('sys-tech-details');
+                const sysTechText = document.getElementById('sys-tech-text');
+                const sysActions = document.getElementById('sys-error-actions');
+                const contactBanner = document.getElementById('contact-banner');
+
+                const sysStatus = config.system_status || "ready";
+
+                if (sysStatus === "starting") {
+                    sysBox.className = "dashboard-box status-starting";
+                    sysIcon.textContent = "⏳";
+                    sysTitle.textContent = config.error_title || "Starter tolkemotoren...";
+                    sysDesc.textContent = config.error_detail || "Laster inn AI-modeller i minnet...";
+                    sysTech.style.display = "none";
+                    sysActions.style.display = "none";
+                } else if (sysStatus === "error") {
+                    sysBox.className = "dashboard-box status-error";
+                    sysIcon.textContent = "🔴";
+                    sysTitle.textContent = config.error_title || "Teknisk feil i tolkemotoren!";
+                    sysDesc.textContent = "Tolkemotoren kunne ikke starte. Se teknisk diagnose under:";
+                    sysTechText.textContent = config.error_detail || "Ukjent feil.";
+                    sysTech.style.display = "block";
+                    sysActions.style.display = "block";
+                } else {
+                    sysBox.className = "dashboard-box status-ready";
+                    sysIcon.textContent = "🟢";
+                    sysTitle.textContent = "Tolkemotoren er klar";
+                    sysDesc.textContent = "Alle AI-modeller er lastet inn i GPU (RTX 3060).";
+                    sysTech.style.display = "none";
+                    sysActions.style.display = "none";
+                }
+
+                // --- Oppdater Lydkort & Mikrofonstatus ---
+                const audioBox = document.getElementById('audio-status-box');
+                const audioIcon = document.getElementById('audio-status-icon');
+                const audioTitle = document.getElementById('audio-status-title');
+                const audioDesc = document.getElementById('audio-status-desc');
+                const vuContainer = document.getElementById('vu-meter-container');
+                const vuBar = document.getElementById('vu-bar');
+                const vuText = document.getElementById('vu-text');
+
+                if (config.audio_status === "missing") {
+                    audioBox.className = "dashboard-box audio-missing";
+                    audioIcon.textContent = "⚠️";
+                    audioTitle.textContent = "Lydkort / mikrofon er ikke tilkoblet!";
+                    audioDesc.textContent = config.audio_message || "Sjekk USB-kabelen til lydkortet.";
+                    vuContainer.style.display = "none";
+                } else {
+                    audioBox.className = "dashboard-box audio-ok";
+                    audioIcon.textContent = "🎙️";
+                    audioTitle.textContent = config.audio_message || "Mikrofon tilkoblet";
+                    audioDesc.textContent = "Systemet lytter aktivt etter tale.";
+                    vuContainer.style.display = "flex";
+
+                    const level = config.mic_level || 0.0;
+                    vuBar.style.width = Math.min(100, Math.round(level * 100)) + "%";
+                    if (level > 0.08) {
+                        vuText.textContent = "Tale registrert (OK)";
+                        vuText.style.color = "#4caf50";
+                    } else {
+                        vuText.textContent = "Helt stille / mikrofon dempet";
+                        vuText.style.color = "#aaa";
+                    }
+                }
+
+                // Vis kontaktbanner hvis det er en systemfeil eller manglende lydkort
+                if (sysStatus === "error" || config.audio_status === "missing") {
+                    contactBanner.style.display = "block";
+                } else {
+                    contactBanner.style.display = "none";
+                }
+            } catch (error) {
+                wasOffline = true;
+                const statusLog = document.getElementById('status-log');
+                const statusText = document.getElementById('status-text');
+                statusLog.style.color = "#f44336";
+                statusText.textContent = "Finner ikke Tolkemaskinen. Venter på at den skal starte opp...";
+            }
+        }
+
+        // Kjør synkroniseringen med én gang du åpner kontrollpanelet, og deretter hvert 2. sekund!
+        syncStatus();
+        setInterval(syncStatus, 2000);
+
+        async function restartSystem() {
+            if (!confirm("Er du sikker på at du vil starte tolkemaskinen på nytt? Dette vil tømme minnet og ta ca. 15 sekunder. Lyden vil forsvinne i mellomtiden.")) {
+                return;
+            }
+            isUpdating = true;
+            const statusLog = document.getElementById('status-log');
+            const statusText = document.getElementById('status-text');
+            const progressContainer = document.getElementById('progress-container');
+            
+            statusLog.style.color = "#ffeb3b";
+            statusText.textContent = "Omstarter nå... (ikke lukk fanen).";
+            progressContainer.style.display = "block"; // Vis progress bar
+
+            // Viktig for Safari: ikke bruk fetch mot /api/restart i hovedvinduet — når serveren dør, kan fanen «henge».
+            // Omstart trigges i et usynlig iframe; hovedsiden bare venter og poller status med XHR.
+            const iframe = document.createElement('iframe');
+            iframe.setAttribute('aria-hidden', 'true');
+            iframe.style.cssText = 'position:absolute;width:0;height:0;border:0;visibility:hidden';
+            iframe.src = `${apiBase()}/api/restart?_=${Date.now()}`;
+            document.body.appendChild(iframe);
+            setTimeout(function () {
+                try { iframe.remove(); } catch (e) { /* ignore */ }
+            }, 15000);
+
+            wasOffline = true;
+            await new Promise((r) => setTimeout(r, 5000));
+
+            const maxAttempts = 120;
+            for (let i = 0; i < maxAttempts; i++) {
+                try {
+                    const text = await xhrGet(`${apiBase()}/api/status?_=${Date.now()}`);
+                    const config = JSON.parse(text);
+                    wasOffline = false;
+                    if (config.languages) {
+                        for (const [code, info] of Object.entries(config.languages)) {
+                            norskeNavn[code] = info.name || code;
+                        }
+                    }
+                    renderTextingOptions(config);
+                    renderTtsChannels(config);
+                    applyConfigFromJson(config);
+                    statusLog.style.color = "#4caf50";
+                    statusText.textContent = "Systemet er startet på nytt og er klart.";
+                    progressContainer.style.display = "none";
+                    isUpdating = false;
+                    return;
+                } catch (e) {
+                    // Vi oppdaterer ikke lenger teksten med i/maxAttempts, baren viser at den jobber
+                }
+                await new Promise((r) => setTimeout(r, 1000));
+            }
+            statusLog.style.color = "#f44336";
+            statusText.textContent = "Fikk ikke kontakt etter omstart. Lukk fanen og åpne kontrollpanelet på nytt.";
+            progressContainer.style.display = "none";
+            isUpdating = false;
+        }
+    </script>
+</body>
+</html>

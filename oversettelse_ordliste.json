@@ -1,0 +1,426 @@
+{
+  "lovsang": {
+    "en": "worship",
+    "uk": "прославлення",
+    "sv": "lovsång",
+    "da": "lovsang",
+    "ru": "прославление",
+    "es": "alabanza"
+  },
+  "lovsangen": {
+    "en": "the worship",
+    "uk": "прославлення",
+    "sv": "lovsången",
+    "da": "lovsangen",
+    "ru": "прославление",
+    "es": "la alabanza"
+  },
+  "løven og lammet": {
+    "en": "the lion and the lamb",
+    "uk": "лев і агнець",
+    "sv": "lejonet och lammet",
+    "da": "løven og lammet",
+    "ru": "лев и агнец",
+    "es": "el león y el cordero"
+  },
+  "jakobs brev": {
+    "en": "James",
+    "uk": "послання Якова",
+    "sv": "Jakobsbrevet",
+    "da": "Jakobsbrevet",
+    "ru": "послание Иакова",
+    "es": "Santiago"
+  },
+  "nåde": {
+    "en": "grace",
+    "uk": "благодать",
+    "sv": "nåd",
+    "da": "nåde",
+    "ru": "благодать",
+    "es": "gracia"
+  },
+  "frelse": {
+    "en": "salvation",
+    "uk": "спасіння",
+    "sv": "frälsning",
+    "da": "frelse",
+    "ru": "спасение",
+    "es": "salvación"
+  },
+  "menighet": {
+    "en": "congregation",
+    "uk": "громада",
+    "sv": "församling",
+    "da": "menighed",
+    "ru": "община",
+    "es": "congregación"
+  },
+  "menigheten": {
+    "en": "the congregation",
+    "uk": "громада",
+    "sv": "församlingen",
+    "da": "menigheden",
+    "ru": "община",
+    "es": "la congregación"
+  },
+  "gudstjeneste": {
+    "en": "service",
+    "uk": "богослужіння",
+    "sv": "gudstjänst",
+    "da": "gudstjeneste",
+    "ru": "богослужение",
+    "es": "culto"
+  },
+  "nattverd": {
+    "en": "communion",
+    "uk": "причастя",
+    "sv": "nattvard",
+    "da": "nadver",
+    "ru": "причастие",
+    "es": "santa cena"
+  },
+  "dåp": {
+    "en": "baptism",
+    "uk": "хрещення",
+    "sv": "dop",
+    "da": "dåb",
+    "ru": "крещение",
+    "es": "bautismo"
+  },
+  "syndefall": {
+    "en": "the fall of man",
+    "uk": "гріхопадіння",
+    "sv": "syndafall",
+    "da": "syndefald",
+    "ru": "грехопадение",
+    "es": "la caída del hombre"
+  },
+  "syndsbekjennelse": {
+    "en": "confession",
+    "uk": "сповідь",
+    "sv": "syndabekännelse",
+    "da": "syndsbekendelse",
+    "ru": "исповедь",
+    "es": "confesión"
+  },
+  "tilgivelse": {
+    "en": "forgiveness",
+    "uk": "прощення",
+    "sv": "förlåtelse",
+    "da": "tilgivelse",
+    "ru": "прощение",
+    "es": "perdón"
+  },
+  "rettferdiggjørelse": {
+    "en": "justification",
+    "uk": "виправдання",
+    "sv": "rättfärdiggörelse",
+    "da": "retfærdiggørelse",
+    "ru": "оправдание",
+    "es": "justificación"
+  },
+  "helliggjørelse": {
+    "en": "sanctification",
+    "uk": "освячення",
+    "sv": "helgelse",
+    "da": "helliggørelse",
+    "ru": "освящение",
+    "es": "santificación"
+  },
+  "forbønn": {
+    "en": "intercession",
+    "uk": "заступництво",
+    "sv": "förbön",
+    "da": "forbøn",
+    "ru": "ходатайство",
+    "es": "intercesión"
+  },
+  "bønnesvar": {
+    "en": "answered prayer",
+    "uk": "відповідь на молитву",
+    "sv": "bönesvar",
+    "da": "bønnesvar",
+    "ru": "ответ на молитву",
+    "es": "oración contestada"
+  },
+  "nådegave": {
+    "en": "spiritual gift",
+    "uk": "духовний дар",
+    "sv": "nådegåva",
+    "da": "nådegave",
+    "ru": "духовный дар",
+    "es": "don espiritual"
+  },
+  "tungetale": {
+    "en": "speaking in tongues",
+    "uk": "говоріння іншими мовами",
+    "sv": "tungotal",
+    "da": "tungetale",
+    "ru": "говорение на иных языках",
+    "es": "hablar en lenguas"
+  },
+  "sakrament": {
+    "en": "sacrament",
+    "uk": "таїнство",
+    "sv": "sakrament",
+    "da": "sakramente",
+    "ru": "таинство",
+    "es": "sacramento"
+  },
+  "tilbedelse": {
+    "en": "worship",
+    "uk": "поклоніння",
+    "sv": "tillbedjan",
+    "da": "tilbedelse",
+    "ru": "поклонение",
+    "es": "adoración"
+  },
+  "lovprise": {
+    "en": "praise",
+    "uk": "славити",
+    "sv": "lova",
+    "da": "lovprise",
+    "ru": "славить",
+    "es": "alabar"
+  },
+  "halleluja": {
+    "en": "hallelujah",
+    "uk": "алілуя",
+    "sv": "halleluja",
+    "da": "halleluja",
+    "ru": "аллилуйя",
+    "es": "aleluya"
+  },
+  "velsignelse": {
+    "en": "blessing",
+    "uk": "благословення",
+    "sv": "välsignelse",
+    "da": "velsignelse",
+    "ru": "благословение",
+    "es": "bendición"
+  },
+  "treenigheten": {
+    "en": "the trinity",
+    "uk": "Трійця",
+    "sv": "treenigheten",
+    "da": "treenigheden",
+    "ru": "Троица",
+    "es": "la trinidad"
+  },
+  "den hellige ånd": {
+    "en": "the holy spirit",
+    "uk": "Святий Дух",
+    "sv": "den Helige Ande",
+    "da": "Helligånden",
+    "ru": "Святой Дух",
+    "es": "el espíritu santo"
+  },
+  "korsfestelse": {
+    "en": "crucifixion",
+    "uk": "розп'яття",
+    "sv": "korsfästelse",
+    "da": "korsfæstelse",
+    "ru": "распятие",
+    "es": "crucifixión"
+  },
+  "oppstandelse": {
+    "en": "resurrection",
+    "uk": "воскресіння",
+    "sv": "uppståndelse",
+    "da": "opstandelse",
+    "ru": "воскресение",
+    "es": "resurrección"
+  },
+  "himmelfart": {
+    "en": "ascension",
+    "uk": "вознесіння",
+    "sv": "himmelsfärd",
+    "da": "himmelfart",
+    "ru": "вознесение",
+    "es": "ascensión"
+  },
+  "gjenkomst": {
+    "en": "second coming",
+    "uk": "друге пришестя",
+    "sv": "återkomst",
+    "da": "genkomst",
+    "ru": "второе пришествие",
+    "es": "segunda venida"
+  },
+  "dommedag": {
+    "en": "judgment day",
+    "uk": "Судний день",
+    "sv": "domedagen",
+    "da": "dommedag",
+    "ru": "Судный день",
+    "es": "día del juicio"
+  },
+  "evangelium": {
+    "en": "gospel",
+    "uk": "Євангеліє",
+    "sv": "evangelium",
+    "da": "evangelium",
+    "ru": "Евангелие",
+    "es": "evangelio"
+  },
+  "disippel": {
+    "en": "disciple",
+    "uk": "учень",
+    "sv": "lärjunge",
+    "da": "discipel",
+    "ru": "ученик",
+    "es": "discípulo"
+  },
+  "apostel": {
+    "en": "apostle",
+    "uk": "апостол",
+    "sv": "apostel",
+    "da": "apostel",
+    "ru": "апостол",
+    "es": "apóstol"
+  },
+  "profet": {
+    "en": "prophet",
+    "uk": "пророк",
+    "sv": "profet",
+    "da": "profet",
+    "ru": "пророк",
+    "es": "profeta"
+  },
+  "pastor": {
+    "en": "pastor",
+    "uk": "пастор",
+    "sv": "pastor",
+    "da": "pastor",
+    "ru": "пастор",
+    "es": "pastor"
+  },
+  "menighetseldste": {
+    "en": "church elder",
+    "uk": "старійшина церкви",
+    "sv": "äldste",
+    "da": "menighedsældste",
+    "ru": "старейшина церкви",
+    "es": "anciano de la iglesia"
+  },
+  "diakon": {
+    "en": "deacon",
+    "uk": "диякон",
+    "sv": "diakon",
+    "da": "diakon",
+    "ru": "диакон",
+    "es": "diácono"
+  },
+  "biskop": {
+    "en": "bishop",
+    "uk": "єпископ",
+    "sv": "biskop",
+    "da": "biskop",
+    "ru": "епископ",
+    "es": "obispo"
+  },
+  "kirke": {
+    "en": "church",
+    "uk": "церква",
+    "sv": "kyrka",
+    "da": "kirke",
+    "ru": "церковь",
+    "es": "iglesia"
+  },
+  "kirken": {
+    "en": "the church",
+    "uk": "церква",
+    "sv": "kyrkan",
+    "da": "kirken",
+    "ru": "церковь",
+    "es": "la iglesia"
+  },
+  "tale": {
+    "en": "sermon",
+    "uk": "проповідь",
+    "sv": "predikan",
+    "da": "prædiken",
+    "ru": "проповедь",
+    "es": "predicación"
+  },
+  "talen": {
+    "en": "the sermon",
+    "uk": "проповідь",
+    "sv": "predikan",
+    "da": "prædikenen",
+    "ru": "проповедь",
+    "es": "la predicación"
+  },
+  "vitnesbyrd": {
+    "en": "testimony",
+    "uk": "свідчення",
+    "sv": "vittnesbörd",
+    "da": "vidnesbyrd",
+    "ru": "свидетельство",
+    "es": "testimonio"
+  },
+  "bibelen": {
+    "en": "the bible",
+    "uk": "Біблія",
+    "sv": "bibeln",
+    "da": "Bibelen",
+    "ru": "Библия",
+    "es": "la biblia"
+  },
+  "det gamle testamente": {
+    "en": "the old testament",
+    "uk": "Старий Завіт",
+    "sv": "Gamla Testamentet",
+    "da": "Det Gamle Testamente",
+    "ru": "Ветхий Завет",
+    "es": "el antiguo testamento"
+  },
+  "det nye testamente": {
+    "en": "the new testament",
+    "uk": "Новий Завіт",
+    "sv": "Nya Testamentet",
+    "da": "Det Nye Testamente",
+    "ru": "Новый Завет",
+    "es": "el nuevo testamento"
+  },
+  "salmene": {
+    "en": "psalms",
+    "uk": "Псалми",
+    "sv": "psalmerna",
+    "da": "Salmerne",
+    "ru": "Псалмы",
+    "es": "salmos"
+  },
+  "ordspråkene": {
+    "en": "proverbs",
+    "uk": "Притчі",
+    "sv": "Ordspråksboken",
+    "da": "Ordsprogene",
+    "ru": "Притчи",
+    "es": "proverbios"
+  },
+  "åpenbaringen": {
+    "en": "revelation",
+    "uk": "Об'явлення",
+    "sv": "Uppenbarelseboken",
+    "da": "Åbenbaringen",
+    "ru": "Откровение",
+    "es": "apocalipsis"
+  },
+  "herre vær barmhjertig": {
+    "en": "lord have mercy",
+    "uk": "господи помилуй",
+    "sv": "Herre förbarma dig",
+    "da": "Herre forbarm dig",
+    "ru": "господи помилуй",
+    "es": "señor ten misericordia"
+  },
+  "i faderens og sønnens og den hellige ånds navn": {
+    "en": "in the name of the father and of the son and of the holy spirit",
+    "uk": "в ім'я отця і сина і святого духа",
+    "sv": "i Faderns och Sonens och den Helige Andes namn",
+    "da": "i Faderens og Sønnens og Helligåndens navn",
+    "ru": "во имя отца и сына и святого духа",
+    "es": "en el nombre del padre y del hijo y del espíritu santo"
+  }
+}

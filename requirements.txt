@@ -1,0 +1,10 @@
+faster-whisper==1.0.1
+sounddevice==0.4.6
+numpy==1.26.4
+websockets==12.0
+aiohttp==3.9.3
+transformers==4.37.2
+omegaconf==2.3.0
+safetensors==0.4.2
+omnivoice
+soundfile>=0.12.1

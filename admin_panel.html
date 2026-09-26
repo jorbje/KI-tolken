@@ -1,0 +1,1972 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KI-Tolken Administrasjon</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        .admin-sidebar {
+            flex: 1.1;
+            max-width: 520px;
+            background-color: #1e1e1e;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            overflow-y: auto;
+        }
+        .admin-sidebar h1 {
+            font-size: 1.8rem;
+            margin-top: 0;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .admin-sidebar h2 {
+            font-size: 1.3rem;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+        }
+        .control-panel-iframe {
+            flex: 2;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            background-color: #1e1e1e;
+            height: 100%;
+        }
+        
+        /* Form-elementer */
+        label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 0.95rem; }
+        .hint-text {
+            font-size: 0.82rem;
+            color: #aaa;
+            margin-top: -4px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        input[type="text"], input[type="file"], select, input[type="number"] {
+            width: 100%;
+            padding: 11px 12px;
+            margin-bottom: 14px;
+            border-radius: 6px;
+            border: 1px solid #444;
+            background-color: #2a2a2a;
+            color: #fff;
+            box-sizing: border-box;
+            font-size: 0.95rem;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4caf50;
+        }
+        button.action-btn {
+            width: 100%;
+            padding: 13px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        button.action-btn:hover { background-color: #43a047; }
+        button.action-btn:disabled { background-color: #555; cursor: not-allowed; opacity: 0.7; }
+        
+        .info-box {
+            background-color: #2a2a2a;
+            border-left: 4px solid #2196f3;
+            padding: 14px;
+            margin-bottom: 20px;
+            font-size: 0.92rem;
+            line-height: 1.45;
+            border-radius: 0 6px 6px 0;
+        }
+        .warning-box {
+            background-color: #331f1e;
+            border-left: 4px solid #f44336;
+            padding: 14px;
+            margin-top: 10px;
+            font-size: 0.92rem;
+            line-height: 1.45;
+            display: none;
+            border-radius: 0 6px 6px 0;
+        }
+        .status-msg {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 6px;
+            display: none;
+            font-weight: bold;
+            text-align: center;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        /* Språkliste / Kort */
+        .language-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .lang-card {
+            background-color: #252525;
+            border: 1px solid #383838;
+            border-radius: 8px;
+            padding: 12px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 0.2s;
+        }
+        .lang-card:hover {
+            border-color: #4caf50;
+        }
+        .lang-info-main {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .lang-title {
+            font-size: 1.05rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .lang-sub {
+            font-size: 0.8rem;
+            color: #888;
+        }
+        .lang-badges {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .badge {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+        .badge-voice {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: #81c784;
+            border: 1px solid #4caf50;
+        }
+        .badge-textonly {
+            background-color: rgba(33, 150, 243, 0.2);
+            color: #64b5f6;
+            border: 1px solid #2196f3;
+        }
+        .badge-default {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #bbb;
+        }
+        .btn-delete {
+            background-color: transparent;
+            color: #ff5252;
+            border: 1px solid #ff5252;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .btn-delete:hover {
+            background-color: #ff5252;
+            color: white;
+        }
+
+        /* 2-kolonne rad i form */
+        .form-row {
+            display: flex;
+            gap: 12px;
+        }
+        .form-col {
+            flex: 1;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Miksebord Opptaks-boks */
+        .mixer-box {
+            background: linear-gradient(145deg, #1e2633 0%, #151a22 100%);
+            border: 1px solid #2979ff;
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 12px;
+            margin-bottom: 15px;
+            display: none;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.15);
+        }
+        .mixer-tips {
+            background-color: rgba(33, 150, 243, 0.1);
+            border-left: 3px solid #2979ff;
+            border-radius: 0 6px 6px 0;
+            padding: 10px 14px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #bbdefb;
+            margin-bottom: 14px;
+        }
+        .mixer-tips ul {
+            margin: 6px 0 0 0;
+            padding-left: 18px;
+        }
+        .mixer-tips li {
+            margin-bottom: 4px;
+        }
+        .countdown-overlay {
+            display: none;
+            text-align: center;
+            padding: 25px 15px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px dashed #2979ff;
+        }
+        .countdown-number {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: #ff9800;
+            line-height: 1;
+            margin: 0;
+            text-shadow: 0 0 20px rgba(255, 152, 0, 0.6);
+            animation: pulseCount 0.9s ease-out infinite;
+        }
+        .countdown-kjor {
+            color: #4caf50 !important;
+            font-size: 3.5rem !important;
+            text-shadow: 0 0 25px rgba(76, 175, 80, 0.8) !important;
+        }
+        @keyframes pulseCount {
+            0% { transform: scale(0.7); opacity: 0.3; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1.0); opacity: 0.9; }
+        }
+        .recording-active-panel {
+            display: none;
+            background-color: #2b1717;
+            border: 1px solid #f44336;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .rec-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #ff5252;
+            font-weight: bold;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+        .rec-dot {
+            width: 14px;
+            height: 14px;
+            background-color: #ff1744;
+            border-radius: 50%;
+            animation: blinkRec 1s ease-in-out infinite alternate;
+            box-shadow: 0 0 10px #ff1744;
+        }
+        @keyframes blinkRec {
+            from { opacity: 0.3; transform: scale(0.85); }
+            to { opacity: 1; transform: scale(1.15); }
+        }
+        .progress-track {
+            background-color: #333;
+            border-radius: 8px;
+            height: 12px;
+            overflow: hidden;
+            margin: 10px 0 8px 0;
+            border: 1px solid #444;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #ff9800, #f44336);
+            height: 100%;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        .preview-player-box {
+            display: none;
+            background-color: #1a2a1f;
+            border: 1px solid #4caf50;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+        .preview-player-box audio {
+            width: 100%;
+            margin: 8px 0;
+        }
+        .btn-mixer-record {
+            background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 18px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            transition: transform 0.1s, filter 0.2s;
+        }
+        .btn-mixer-record:hover {
+            filter: brightness(1.15);
+        }
+        .btn-mixer-stop {
+            background: linear-gradient(135deg, #424242 0%, #212121 100%);
+            color: #fff;
+            border: 1px solid #888;
+            border-radius: 6px;
+            padding: 10px 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 8px;
+        }
+        .btn-mixer-stop:hover {
+            background: #555;
+        }
+        .btn-secondary {
+            background: #333;
+            border: 1px solid #555;
+            color: #fff;
+            padding: 7px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        .btn-secondary:hover {
+            background: #444;
+        }
+
+        /* Live VU-meter for miksebord-signal */
+        .mixer-vu-box {
+            background-color: #161c24;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+        }
+        .vu-meter-track {
+            background: #0b111e;
+            border-radius: 6px;
+            height: 16px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #1e293b;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
+            margin: 6px 0 4px 0;
+        }
+        .vu-meter-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #22c55e 0%, #84cc16 60%, #eab308 80%, #ef4444 100%);
+            border-radius: 5px;
+            transition: width 0.08s ease-out;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
+        }
+        .status-indicator-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #64748b;
+            display: inline-block;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+
+        /* Flerspors Lydopptak Stiler */
+        .rec-section {
+            background: linear-gradient(145deg, #22181c 0%, #17151a 100%);
+            border: 1px solid #d32f2f;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(211, 47, 47, 0.18);
+        }
+        .rec-section h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #3d232a;
+            padding-bottom: 10px;
+            color: #ff8a80;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .rec-live-badge-top {
+            font-size: 0.75rem;
+            background-color: #d32f2f;
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: bold;
+            animation: blinkRec 1s ease-in-out infinite alternate;
+            vertical-align: middle;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        .tracks-preview-box {
+            background-color: #241d24;
+            border: 1px solid #443039;
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 16px;
+        }
+        .tracks-preview-box h4 {
+            margin: 0 0 8px 0;
+            font-size: 0.88rem;
+            color: #ffcdd2;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .track-pill-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .track-pill {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 7px 12px;
+            border-radius: 6px;
+            font-size: 0.88rem;
+        }
+        .track-pill-mic {
+            border-left: 3px solid #4caf50;
+        }
+        .track-pill-tts {
+            border-left: 3px solid #29b6f6;
+        }
+        .track-pill .track-num {
+            font-weight: bold;
+            color: #fff;
+        }
+        .track-pill .track-lang {
+            color: #aaa;
+            font-size: 0.82rem;
+        }
+        .btn-multitrack-start {
+            background: linear-gradient(135deg, #e53935 0%, #b71c1c 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(229, 57, 53, 0.4);
+        }
+        .btn-multitrack-start:hover {
+            background: linear-gradient(135deg, #f44336 0%, #c62828 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(229, 57, 53, 0.6);
+        }
+        .btn-multitrack-stop {
+            background: linear-gradient(135deg, #d32f2f 0%, #880e4f 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(211, 47, 47, 0.4);
+            transition: all 0.2s;
+        }
+        .btn-multitrack-stop:hover {
+            background: linear-gradient(135deg, #b71c1c 0%, #4a148c 100%);
+            transform: translateY(-1px);
+        }
+        .recording-active-card {
+            background: #2a1417;
+            border: 2px solid #ff5252;
+            border-radius: 10px;
+            padding: 18px;
+            text-align: center;
+            margin-bottom: 14px;
+            animation: pulseRecCard 2s infinite;
+        }
+        @keyframes pulseRecCard {
+            0% { border-color: #ff5252; box-shadow: 0 0 10px rgba(255, 82, 82, 0.2); }
+            50% { border-color: #ff1744; box-shadow: 0 0 25px rgba(255, 23, 68, 0.5); }
+            100% { border-color: #ff5252; box-shadow: 0 0 10px rgba(255, 82, 82, 0.2); }
+        }
+        .timer-big {
+            font-size: 2.5rem;
+            font-family: monospace;
+            font-weight: bold;
+            color: #ff5252;
+            letter-spacing: 2px;
+            margin: 8px 0;
+            text-shadow: 0 0 15px rgba(255, 82, 82, 0.6);
+        }
+        .recording-result-card {
+            background: #17241b;
+            border: 1px solid #4caf50;
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.15);
+        }
+        .download-master-btn {
+            display: block;
+            text-align: center;
+            background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+            color: white;
+            text-decoration: none;
+            padding: 14px 18px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            margin-top: 12px;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+            transition: all 0.2s;
+        }
+        .download-master-btn:hover {
+            background: linear-gradient(135deg, #388e3c 0%, #2e7d32 100%);
+            transform: translateY(-1px);
+        }
+        .stem-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 0.88rem;
+        }
+        .stem-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-stem-dl {
+            background-color: #388e3c;
+            color: white;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.78rem;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .btn-stem-dl:hover { background-color: #43a047; }
+        .btn-stem-play {
+            background-color: #1976d2;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.78rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-stem-play:hover { background-color: #2196f3; }
+        .archive-list {
+            margin-top: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .archive-card {
+            background-color: #222;
+            border: 1px solid #383838;
+            border-radius: 6px;
+            padding: 10px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 0.2s;
+        }
+        .archive-card:hover {
+            border-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-sidebar">
+        <h1>
+            <span>⚙️ Teknisk Administrasjon</span>
+            <span id="topRecBadge" class="rec-live-badge-top" style="display: none;" onclick="scrollToRecordingSection()">
+                <span class="rec-dot" style="width: 8px; height: 8px;"></span> REC <span id="topRecTimer">00:00</span>
+            </span>
+        </h1>
+        
+        <div class="info-box">
+            Her kan du styre oversettelsesspråk, klone nye stemmeprofiler og justere antall samtidige lydkanaler ut på lydkortet. Alt synkroniseres direkte til tolke-grensesnittet til høyre.
+        </div>
+
+        <!-- Seksjon 1: Oversikt over installerte språk -->
+        <h2>🌐 Aktive Språk i Tolkemotoren</h2>
+        <div id="languageList" class="language-list">
+            <div style="color: #888; font-size: 0.9rem;">Henter språkliste...</div>
+        </div>
+
+        <!-- Seksjon 2: Legg til nytt språk og stemme -->
+        <h2>➕ Legg til nytt språk i Tolken</h2>
+        <div class="info-box" style="border-left-color: #9c27b0;">
+            NLLB-200 oversetter automatisk til det valgte språket. Hvis du også laster opp en 10-15 sekunders lydprøve, kloner AI-en stemmen for øreplugg-opplesning. Hvis ikke, blir språket tilgjengelig for direkte underteksting på skjerm!
+        </div>
+
+        <form id="newLanguageForm" onsubmit="submitNewLanguage(event)">
+            <label for="langPreset">Velg et språk fra listen (autofyller koder):</label>
+            <select id="langPreset" onchange="onPresetChange()">
+                <option value="">-- Velg et språk eller fyll ut manuelt --</option>
+                <option value="no|Norsk|nob_Latn|no">🇳🇴 Norsk (Bokmål)</option>
+                <option value="en|Engelsk|eng_Latn|en">🇬🇧 Engelsk (English)</option>
+                <option value="sv|Svensk|swe_Latn|sv">🇸🇪 Svensk (Svenska)</option>
+                <option value="da|Dansk|dan_Latn|da">🇩🇰 Dansk (Dansk)</option>
+                <option value="uk|Ukrainsk|ukr_Cyrl|uk">🇺🇦 Ukrainsk (Українська)</option>
+                <option value="es|Spansk|spa_Latn|es">🇪🇸 Spansk (Español)</option>
+                <option value="de|Tysk|deu_Latn|de">🇩🇪 Tysk (Deutsch)</option>
+                <option value="fr|Fransk|fra_Latn|fr">🇫🇷 Fransk (Français)</option>
+                <option value="pl|Polsk|pol_Latn|en">🇵🇱 Polsk (Polski)</option>
+                <option value="fa|Farsi|pes_Arab|en">🇮🇷 Farsi / Persisk (فارسی)</option>
+                <option value="ar|Arabisk|arb_Arab|ar">🇸🇦 Arabisk (العربية)</option>
+                <option value="ru|Russisk|rus_Cyrl|ru">🇷🇺 Russisk (Русский)</option>
+                <option value="pt|Portugisisk|por_Latn|pt">🇵🇹 Portugisisk (Português)</option>
+                <option value="it|Italiensk|ita_Latn|it">🇮🇹 Italiensk (Italiano)</option>
+                <option value="nl|Nederlandsk|nld_Latn|en">🇳🇱 Nederlandsk (Nederlands)</option>
+                <option value="fi|Finsk|fin_Latn|en">🇫🇮 Finsk (Suomi)</option>
+                <option value="ro|Rumensk|ron_Latn|en">🇷🇴 Rumensk (Română)</option>
+                <option value="tr|Tyrkisk|tur_Latn|tr">🇹🇷 Tyrkisk (Türkçe)</option>
+                <option value="ti|Tigrinja|tir_Ethi|en">🇪🇷 Tigrinja (ትግርኛ)</option>
+                <option value="am|Amharisk|amh_Ethi|en">🇪🇹 Amharisk (አማርኛ)</option>
+                <option value="so|Somalisk|som_Latn|en">🇸🇴 Somalisk (Soomaali)</option>
+                <option value="ckb|Kurdisk (Sorani)|ckb_Arab|en">☀️ Kurdisk Sorani (کوردی)</option>
+                <option value="kmr|Kurdisk (Kurmanji)|kmr_Latn|en">☀️ Kurdisk Kurmanji (Kurmancî)</option>
+                <option value="zh|Kinesisk|zho_Hans|zh">🇨🇳 Kinesisk (forenklet) (中文)</option>
+                <option value="tl|Tagalog|tgl_Latn|en">🇵🇭 Tagalog / Filippinsk</option>
+                <option value="vi|Vietnamesisk|vie_Latn|en">🇻🇳 Vietnamesisk (Tiếng Việt)</option>
+                <option value="hi|Hindi|hin_Deva|en">🇮🇳 Hindi (हिन्दी)</option>
+                <option value="sw|Swahili|swh_Latn|en">🇰🇪 Swahili (Kiswahili)</option>
+                <option value="ur|Urdu|urd_Arab|en">🇵🇰 Urdu (اردو)</option>
+                <option value="el|Gresk|ell_Grek|en">🇬🇷 Gresk (Ελληνικά)</option>
+                <option value="cs|Tsjekkisk|ces_Latn|en">🇨🇿 Tsjekkisk (Čeština)</option>
+                <option value="hu|Ungarsk|hun_Latn|en">🇭🇺 Ungarsk (Magyar)</option>
+                <option value="sk|Slovakisk|slk_Latn|en">🇸🇰 Slovakisk (Slovenčina)</option>
+                <option value="sr|Serbisk|srp_Cyrl|ru">🇷🇸 Serbisk (Српски)</option>
+                <option value="hr|Kroatisk|hrv_Latn|en">🇭🇷 Kroatisk (Hrvatski)</option>
+                <option value="bs|Bosnisk|bos_Latn|en">🇧🇦 Bosnisk (Bosanski)</option>
+                <option value="sq|Albansk|als_Latn|en">🇦🇱 Albansk (Shqip)</option>
+                <option value="lt|Litauisk|lit_Latn|en">🇱🇹 Litauisk (Lietuvių)</option>
+                <option value="lv|Latvisk|lvs_Latn|en">🇱🇻 Latvisk (Latviešu)</option>
+                <option value="et|Estisk|est_Latn|en">🇪🇪 Estisk (Eesti)</option>
+                <option value="bg|Bulgarsk|bul_Cyrl|ru">🇧🇬 Bulgarsk (Български)</option>
+                <option value="is|Islandsk|isl_Latn|en">🇮🇸 Islandsk (Íslenska)</option>
+                <option value="custom">✏️ Egendefinert språk (skriv inn FLORES-kode selv)</option>
+            </select>
+
+            <div class="form-row">
+                <div class="form-col">
+                    <label for="langName">Visningsnavn:</label>
+                    <input type="text" id="langName" required placeholder="F.eks. Tysk">
+                </div>
+                <div class="form-col">
+                    <label for="langCode">Kortkode (ID):</label>
+                    <input type="text" id="langCode" required placeholder="F.eks. de" style="text-transform: lowercase;" oninput="checkExistingVoice(this.value)">
+                </div>
+            </div>
+
+            <label for="nllbCode">NLLB-200 Språkkode (FLORES-200):</label>
+            <span class="hint-text">Definerer nøyaktig hvordan NLLB oversetter (f.eks. <code>deu_Latn</code>, <code>fra_Latn</code>, <code>pes_Arab</code>).</span>
+            <input type="text" id="nllbCode" required placeholder="F.eks. deu_Latn">
+            
+            <!-- Sikkerhetsvarsel for eksisterende lokal stemme -->
+            <div id="existingVoiceAlert" style="display: none; background-color: rgba(255, 152, 0, 0.15); border: 1px solid #ff9800; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 0.88rem; color: #ffb74d;">
+                🔒 <strong>Lokal stemme funnet:</strong> Dette språket har allerede en lokal stemmeprofil (<code>prompt.pt</code>). Eksisterende stemme bevares automatisk med mindre du eksplisitt velger å overskrive den.
+            </div>
+
+            <label>Stemmeprøve for opplest lyd i øreplugger:</label>
+            <div style="background-color: #252525; border: 1px solid #383838; border-radius: 8px; padding: 12px; margin-bottom: 15px;">
+                <label id="optKeepVoice" style="display: none; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; margin-bottom: 8px;">
+                    <input type="radio" name="voice_source" value="keep" onchange="onVoiceSourceChange()" style="width: auto; margin-bottom: 0;">
+                    <span>🛡️ <strong>Behold eksisterende lokal stemme (prompt.pt) (Anbefalt)</strong></span>
+                </label>
+
+                <!-- Ta opp fra miksebord / mikrofon -->
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; margin-bottom: 8px;">
+                    <input type="radio" name="voice_source" value="mixer" onchange="onVoiceSourceChange()" style="width: auto; margin-bottom: 0;">
+                    <span id="labelMixer">🎤 <strong>Ta opp direkte fra miksebord / mikrofon (Bruk kirkesalen)</strong></span>
+                </label>
+
+                <!-- Miksebord Opptaks-modul -->
+                <div id="mixerRecordingBox" class="mixer-box">
+                    <div class="mixer-tips">
+                        <strong>💡 Slik leser du inn stemmeprøve fra mikrofonen:</strong>
+                        <ul>
+                            <li>⏱️ <strong>10–15 sekunder er nok:</strong> Du trenger ikke lese lenger – AI-en lærer stemmens klang og dynamikk lynraskt.</li>
+                            <li>🗣️ <strong>Si hva som helst:</strong> Les et bibelvers, snakk om været, eller si favorittoppskriften din. Hva du sier betyr ingenting!</li>
+                            <li>🎙️ <strong>Rolig, nøytral stemme:</strong> Snakk med en nøytral, naturlig stemme i ditt vanlige taletempo.</li>
+                            <li>🎚️ <strong>Miksebord:</strong> Lyd tas opp direkte fra mikrofonen koblet til lydkortet (Audient iD4 / mikseren).</li>
+                        </ul>
+                    </div>
+
+                    <!-- Start opptak med countdown -->
+                    <div id="mixerIdleControls">
+                        <!-- Live VU-lydmeter for å sjekke innkommende miksebord-signal FØR opptak -->
+                        <div class="mixer-vu-box">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <span style="font-size: 0.88rem; font-weight: bold; color: #e2e8f0; display: flex; align-items: center; gap: 6px;">
+                                    <span id="mixerVuDot" class="status-indicator-dot"></span> Signal inn (Miksebord):
+                                </span>
+                                <span id="mixerVuText" style="font-size: 0.8rem; color: #94a3b8;">Lytter etter lyd...</span>
+                            </div>
+                            <div class="vu-meter-track">
+                                <div id="mixerVuBar" class="vu-meter-bar"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #64748b; margin-top: 3px;">
+                                <span>Stille</span>
+                                <span>Optimal tale (30–70%)</span>
+                                <span>Maks</span>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn-mixer-record" onclick="startCountdownAndRecord()">
+                            🔴 Start innlesing (3-2-1-KJØR)
+                        </button>
+                    </div>
+
+                    <!-- Countdown visning -->
+                    <div id="mixerCountdownOverlay" class="countdown-overlay">
+                        <div style="font-size: 0.9rem; color: #bbb; margin-bottom: 8px;">Gjør deg klar foran mikrofonen...</div>
+                        <div id="countdownDisplay" class="countdown-number">3</div>
+                    </div>
+
+                    <!-- Aktiv opptaks-visning -->
+                    <div id="mixerRecordingActive" class="recording-active-panel">
+                        <div class="rec-indicator">
+                            <div class="rec-dot"></div>
+                            <span>TAR OPP FRA MIKSEBORDET NÅ...</span>
+                        </div>
+                        <div style="font-size: 0.88rem; color: #ffcdd2; margin-bottom: 8px;">
+                            Snakk nå med en rolig, nøytral stemme...
+                        </div>
+                        <div class="progress-track">
+                            <div id="mixerProgressFill" class="progress-fill"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: #aaa; margin-bottom: 10px;">
+                            <span id="mixerTimeElapsed">00:00.0</span>
+                            <span>Maks 00:15 sek</span>
+                        </div>
+                        <button type="button" class="btn-mixer-stop" onclick="stopMixerRecording()">
+                            ⏹️ Fullfør opptak nå (Stopp)
+                        </button>
+                    </div>
+
+                    <!-- Forhåndslytting -->
+                    <div id="mixerPreviewBox" class="preview-player-box">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: #81c784; font-weight: bold; font-size: 0.9rem;">
+                                ✅ Opptak fullført (<span id="mixerSampleDuration">0.0</span>s)
+                            </span>
+                            <button type="button" class="btn-secondary" onclick="resetMixerRecording()">
+                                🔄 Ta opp på nytt
+                            </button>
+                        </div>
+                        <audio id="mixerAudioElement" controls preload="none"></audio>
+                        <span class="hint-text" style="margin-bottom: 0;">
+                            Hør gjennom opptaket for å sjekke at lyden fra miksebordet er ren og tydelig.
+                        </span>
+                    </div>
+                </div>
+
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; margin-bottom: 8px;">
+                    <input type="radio" name="voice_source" value="hf" checked onchange="onVoiceSourceChange()" style="width: auto; margin-bottom: 0;">
+                    <span id="labelHf">🤗 <strong>Ekte menneskestemme fra Hugging Face (Katalog med 44 språk)</strong></span>
+                </label>
+                <div id="hfNotice" style="background-color: rgba(76, 175, 80, 0.15); border: 1px solid #4caf50; border-radius: 6px; padding: 8px 12px; font-size: 0.82rem; color: #a5d6a7; margin-bottom: 12px;">
+                    ✨ <strong>Studio-opptak:</strong> Henter automatisk et ekte, støyfritt taleopptak av en morsmålstaler fra Hugging Face (Open Swara / XTTS-v2) og kloner stemmen til <code>prompt.pt</code>.
+                </div>
+
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; margin-bottom: 8px;">
+                    <input type="radio" name="voice_source" value="custom" onchange="onVoiceSourceChange()" style="width: auto; margin-bottom: 0;">
+                    <span id="labelCustom">📁 Last opp ferdig innspilt lydfil (WAV/MP3)</span>
+                </label>
+
+                <div id="uploadInputBox" style="display: none; padding-left: 24px; margin-bottom: 10px;">
+                    <span class="hint-text">10-15 sek rent opptak av en person som snakker tydelig uten bakgrunnsstøy eller musikk:</span>
+                    <input type="file" id="langVoiceFile" accept="audio/wav, audio/mpeg" style="margin-bottom: 5px;">
+                </div>
+
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; margin-bottom: 0;">
+                    <input type="radio" name="voice_source" value="none" onchange="onVoiceSourceChange()" style="width: auto; margin-bottom: 0;">
+                    <span>📝 Kun teksting på storskjerm (ingen opplest lyd)</span>
+                </label>
+            </div>
+
+            <button type="submit" id="addLangBtn" class="action-btn">Aktiver Språk i KI-Tolken</button>
+            <div id="addLangStatus" class="status-msg"></div>
+        </form>
+
+        <!-- Seksjon 3: Lydkanaler og Maskinvare -->
+        <h2>🎛️ Lydruting og Maskinvare</h2>
+        <label for="channels">Antall samtidige språk ut (Lydkort-kanaler):</label>
+        <div style="display: flex; gap: 10px;">
+            <input type="number" id="channels" min="1" max="2" value="2">
+            <button onclick="setChannels()" class="action-btn" style="width: auto; padding: 11px 20px;">Oppdater</button>
+        </div>
+        <div id="gpu-warning" class="warning-box">
+            ⚠️ <strong>Advarsel for 3+ språk:</strong><br>
+            Sanntids tekst-til-tale (TTS) er krevende på skjermkortet. For 3 eller flere språk samtidig anbefales minst <strong>RTX 4070 Ti Super</strong>, ellers vil opplest lyd kunne henge etter. Pass også på at lydkortet har nok fysiske utganger.
+        </div>
+
+        <!-- Seksjon 3: Håndter Ordliste (Maskert Oversettelse) -->
+        <h2>📖 Håndter Ordliste (Maskert Oversettelse)</h2>
+        <div class="info-box" style="border-left-color: #00bcd4;">
+            <p style="margin-top: 0; margin-bottom: 8px;">
+                Siden NLLB oversetter ut fra vanlig samfunnsstatistikk, bommer den ofte på religiøse termer ("lammet" blir "paralyzed" i stedet for "the lamb"). Derfor har vi en <strong>Maskert Oversettelse</strong>.
+            </p>
+            <p style="margin-bottom: 5px;"><strong>Slik legger du til ord for et nytt språk (Null koding!):</strong></p>
+            <ol style="margin-top: 0; margin-bottom: 0; padding-left: 20px;">
+                <li>Gå til f.eks. <a href="https://duckduckgo.com/chat" target="_blank" style="color: #4dd0e1;">DuckDuckGo AI Chat</a> eller ChatGPT (krever ingen innlogging).</li>
+                <li>Kopier teksten i <strong>Prompt-boksen</strong> under, og lim den inn i chatten.</li>
+                <li>Chat-botten vil gi deg en ferdig oversatt JSON-liste tilbake.</li>
+                <li>Kopier den oversatte JSON-listen, lim den inn i <strong>Lagre-boksen</strong> nederst, og trykk Lagre.</li>
+            </ol>
+        </div>
+        
+        <label>1. Kopier denne teksten (Prompt for AI):</label>
+        <textarea id="aiPromptText" readonly style="width: 100%; height: 120px; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #444; background-color: #2a2a2a; color: #a5d6a7; font-family: monospace; font-size: 0.85rem; resize: vertical; box-sizing: border-box;">
+Jeg har en JSON-ordliste for en app. Oversett de norske ordene (hovednøklene) til [SKRIV INN SPRÅK]. 
+Det er kritisk viktig at du bruker frikirkelig/kristen kontekst (f.eks: 'lammet' er 'the lamb' og 'lovsang' er 'worship').
+VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller slette noen av de eksisterende språkene ("en", "sv", "da", "uk" osv) i JSON-filen. Behold nøyaktig JSON-format. Her er listen:
+
+[KLIKK "HENT NÅVÆRENDE ORDLISTE" FOR Å FYLLE INN DATA HER]
+        </textarea>
+        <button type="button" class="btn-secondary" onclick="fetchDictionaryForPrompt()" style="width: 100%; margin-bottom: 20px;">
+            📄 Hent nåværende ordliste for å lime inn i prompten
+        </button>
+
+        <form id="dictionaryForm" onsubmit="saveDictionary(event)">
+            <label>2. Lim inn det ferdige JSON-svaret fra AI her:</label>
+            <textarea id="dictionaryJsonInput" required placeholder="Lim inn JSON her..." style="width: 100%; height: 150px; padding: 12px; margin-bottom: 14px; border-radius: 6px; border: 1px solid #444; background-color: #1e1e1e; color: #fff; font-family: monospace; font-size: 0.85rem; resize: vertical; box-sizing: border-box;"></textarea>
+            <button type="submit" class="action-btn" id="btnSaveDict" style="background-color: #00bcd4;">
+                💾 Lagre Ordliste
+            </button>
+            <div id="dictStatus" class="status-msg"></div>
+        </form>
+
+        <!-- Seksjon 4: Flerspors Lydopptak (Tale og Tolk) -->
+        <div id="multitrackRecordingSection" class="rec-section">
+            <h2>
+                <span>🎙️ Flerspors Lydopptak</span>
+                <span id="sectionRecStatusBadge" style="font-size: 0.8rem; font-weight: normal; color: #aaa;">Klar</span>
+            </h2>
+
+            <div class="info-box" style="border-left-color: #e53935; background-color: #22181a; margin-bottom: 14px;">
+                <strong>🔴 Sanntids opptak av tale og tolk:</strong><br>
+                Tar opp talerens stemme fra miksebord/mikrofon sammen med alle aktive tolkespråk synkront i et flerspors WAV-lydopptak.
+                <div style="margin-top: 6px; font-size: 0.82rem; color: #ffcdd2; line-height: 1.4;">
+                    💡 <em>Hvorfor WAV?</em> Standard MP3 støtter kun opptil 2 spor (stereo). Opptaket lagres derfor som ukomprimert 48 kHz 16-bit PCM flerspors WAV for fullverdig import i DAW (Audacity/Reaper), samt separate mono WAV-filer (stems) for hvert språk.
+                </div>
+            </div>
+
+            <!-- Forhåndsvisning av aktive spor -->
+            <div class="tracks-preview-box">
+                <h4>🎚️ Aktive spor for opptak:</h4>
+                <div id="recordingTracksList" class="track-pill-list">
+                    <div style="color: #888; font-size: 0.85rem;">Laster spor...</div>
+                </div>
+            </div>
+
+            <!-- Kontrollpanel for opptak -->
+            <div id="recControlIdle">
+                <button type="button" id="btnStartRecording" onclick="startMultitrackRecording()" class="btn-multitrack-start">
+                    <span class="rec-dot" style="width: 12px; height: 12px;"></span>
+                    <span>Start Flersporsopptak</span>
+                </button>
+            </div>
+
+            <div id="recControlActive" style="display: none;">
+                <div class="recording-active-card">
+                    <div class="rec-indicator" style="margin-bottom: 5px;">
+                        <span class="rec-dot"></span> OPPTAK PÅGÅR
+                    </div>
+                    <div id="recTimerBig" class="timer-big">00:00</div>
+                    <div id="recActiveTracksDesc" style="font-size: 0.88rem; color: #ffcdd2; margin-bottom: 12px;">
+                        Tar opp spor i sanntid...
+                    </div>
+                    <button type="button" id="btnStopRecording" onclick="stopMultitrackRecording()" class="btn-multitrack-stop">
+                        <span>⏹️ Stopp og Lagre Opptak</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="recSavingStatus" class="status-msg" style="background-color: #2b1d1d; color: #ffb4ab; border: 1px solid #d32f2f;">
+                <span class="spinner"></span> Lagrer og klargjør flersporsopptak...
+            </div>
+
+            <!-- Resultat fra siste opptak -->
+            <div id="recResultBox" class="recording-result-card" style="display: none;">
+                <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #2e4a35; padding-bottom: 8px; margin-bottom: 10px;">
+                    <span style="font-weight: bold; color: #81c784;">✅ Opptak Fullført og Lagret</span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span id="recResultDuration" style="font-size: 0.85rem; color: #a5d6a7;"></span>
+                        <button type="button" class="btn-delete" style="padding: 3px 8px; font-size: 0.75rem;" onclick="deleteLastRecording()" title="Slett opptaket og fjern avspillingsmulighet">🗑️ Slett opptak</button>
+                    </div>
+                </div>
+                <div style="font-size: 0.85rem; color: #ccc; margin-bottom: 10px;">
+                    Fil: <code id="recResultFilename" style="color: #81c784;"></code> (<span id="recResultSize"></span>)
+                </div>
+
+                <!-- Master flersporsknapp -->
+                <a id="btnDownloadMaster" href="#" download class="download-master-btn">
+                    🎛️ Last ned Komplett Flersporsopptak (WAV)
+                </a>
+
+                <!-- Enkeltspor (Stems) -->
+                <div style="font-size: 0.88rem; font-weight: bold; color: #e0e0e0; margin-bottom: 8px;">
+                    📥 Enkeltspor (Stems per språk):
+                </div>
+                <div id="recStemsList">
+                    <!-- Fylles dynamisk -->
+                </div>
+
+                <!-- Innebygd avspiller for forhåndslytting -->
+                <div id="recPreviewContainer" style="margin-top: 14px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <div id="recPreviewTitle" style="font-size: 0.82rem; color: #90caf9;"></div>
+                        <button type="button" onclick="closeAudioPreview()" style="background: none; border: none; color: #aaa; cursor: pointer; font-size: 0.9rem;" title="Lukk avspiller">✖</button>
+                    </div>
+                    <audio id="recPreviewAudio" controls style="width: 100%; height: 36px;"></audio>
+                </div>
+            </div>
+
+            <!-- Opptaksarkiv (Tidligere opptak) -->
+            <div style="margin-top: 18px; border-top: 1px solid #333; padding-top: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleArchiveVisibility()">
+                    <span style="font-size: 0.95rem; font-weight: bold; color: #ccc;">📁 Tidligere Opptak (<span id="archiveCount">0</span>)</span>
+                    <span id="archiveToggleIcon" style="font-size: 0.8rem; color: #888;">Skjul ▲</span>
+                </div>
+                <div id="archiveContainer" style="display: block; margin-top: 10px;">
+                    <div id="archiveList" class="archive-list">
+                        <div style="color: #777; font-size: 0.85rem; text-align: center; padding: 10px;">Laster opptaksarkiv...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Iframe til det vanlige kontrollpanelet -->
+    <iframe class="control-panel-iframe" src="/kontrollpanel" title="Kontrollpanel for mobil"></iframe>
+
+    <script>
+        const apiBase = () => `http://${window.location.hostname || 'localhost'}:8080`;
+        
+        let currentLanguages = {};
+        let availableVoicesList = [];
+        let hfSupported = [];
+
+        async function fetchHwStatus() {
+            try {
+                const res = await fetch(`${apiBase()}/api/status?_=${Date.now()}`);
+                const config = await res.json();
+                
+                // Håndter maskinvare-kanaler
+                const hwMax = config.hw_max_channels || 2;
+                const chInput = document.getElementById('channels');
+                chInput.max = hwMax;
+                chInput.value = config.active_tts_channels || 2;
+                checkWarning();
+
+                // Håndter støttede Hugging Face språk
+                if (config.hf_supported_languages) {
+                    hfSupported = config.hf_supported_languages;
+                }
+
+                if (config.available_voices) {
+                    availableVoicesList = config.available_voices;
+                }
+
+                // Håndter språkliste
+                if (config.languages) {
+                    currentLanguages = config.languages;
+                    renderLanguageList(config.languages, config.available_voices || []);
+                }
+            } catch (e) {
+                console.error("Klarte ikke hente status fra server:", e);
+            }
+        }
+
+        function renderLanguageList(languages, voices) {
+            const container = document.getElementById('languageList');
+            container.innerHTML = "";
+            
+            for (const [code, info] of Object.entries(languages)) {
+                const card = document.createElement('div');
+                card.className = 'lang-card';
+
+                const hasVoice = voices.includes(code) || info.has_voice;
+
+                const voiceBadge = hasVoice 
+                    ? `<span class="badge badge-voice">🔊 Klonet stemme</span>`
+                    : `<span class="badge badge-textonly">📝 Kun teksting</span>`;
+                
+                const deleteBtn = `<button class="btn-delete" onclick="deleteLanguage('${code}', '${info.name}')" title="Fjern språket fra tolken">Slett</button>`;
+
+                card.innerHTML = `
+                    <div class="lang-info-main">
+                        <div class="lang-title">
+                            ${info.name} 
+                            <span style="font-size: 0.8rem; color: #888; font-weight: normal;">(${code})</span>
+                        </div>
+                        <div class="lang-sub">NLLB: <code>${info.nllb}</code></div>
+                    </div>
+                    <div class="lang-badges">
+                        ${voiceBadge}
+                        ${deleteBtn}
+                    </div>
+                `;
+                container.appendChild(card);
+            }
+        }
+
+        let mixerRecordingInterval = null;
+        let mixerSecondsElapsed = 0;
+        let recordedAudioReady = false;
+        let liveVuInterval = null;
+
+        function startLiveVuMeter() {
+            if (liveVuInterval) return;
+            updateLiveVu();
+            liveVuInterval = setInterval(updateLiveVu, 120);
+        }
+
+        function stopLiveVuMeter() {
+            if (liveVuInterval) {
+                clearInterval(liveVuInterval);
+                liveVuInterval = null;
+            }
+        }
+
+        async function updateLiveVu() {
+            const idleControls = document.getElementById('mixerIdleControls');
+            if (!idleControls || idleControls.style.display === 'none') {
+                return;
+            }
+            const vuBar = document.getElementById('mixerVuBar');
+            const vuDot = document.getElementById('mixerVuDot');
+            const vuText = document.getElementById('mixerVuText');
+            if (!vuBar || !vuDot || !vuText) return;
+
+            try {
+                const res = await fetch(`${apiBase()}/api/admin/mic_level?_=${Date.now()}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                
+                if (data.status === 'missing') {
+                    vuDot.style.backgroundColor = '#ef4444';
+                    vuDot.style.boxShadow = '0 0 8px #ef4444';
+                    vuText.textContent = '⚠️ Mikrofon ikke tilkoblet!';
+                    vuText.style.color = '#f87171';
+                    vuBar.style.width = '0%';
+                    return;
+                }
+
+                const level = data.level || 0.0;
+                const pct = Math.min(100, Math.round(level * 100));
+                vuBar.style.width = `${pct}%`;
+
+                if (level > 0.08) {
+                    vuDot.style.backgroundColor = '#22c55e';
+                    vuDot.style.boxShadow = '0 0 10px #22c55e';
+                    vuText.textContent = `🟢 Tale registrert (${pct}%) – Signal OK!`;
+                    vuText.style.color = '#4caf50';
+                } else if (level > 0.02) {
+                    vuDot.style.backgroundColor = '#eab308';
+                    vuDot.style.boxShadow = '0 0 8px #eab308';
+                    vuText.textContent = `🟡 Svakt signal (${pct}%) – Snakk litt høyere`;
+                    vuText.style.color = '#eab308';
+                } else {
+                    vuDot.style.backgroundColor = '#64748b';
+                    vuDot.style.boxShadow = 'none';
+                    vuText.textContent = '⚪ Stille (Test mikrofonen ved å snakke)';
+                    vuText.style.color = '#94a3b8';
+                }
+            } catch (e) {}
+        }
+
+        function checkExistingVoice(code) {
+            code = (code || "").trim().toLowerCase();
+            const alertBox = document.getElementById('existingVoiceAlert');
+            const optKeep = document.getElementById('optKeepVoice');
+            const labelMixer = document.getElementById('labelMixer');
+            const labelHf = document.getElementById('labelHf');
+            const labelCustom = document.getElementById('labelCustom');
+            
+            const hasVoice = (currentLanguages[code] && (currentLanguages[code].has_voice || currentLanguages[code].voice_folder)) || availableVoicesList.includes(code);
+            
+            if (hasVoice) {
+                alertBox.style.display = 'block';
+                optKeep.style.display = 'flex';
+                if (labelMixer) labelMixer.innerHTML = "⚠️ <strong>Overskriv med nytt opptak fra miksebord</strong>";
+                labelHf.innerHTML = "⚠️ <strong>Overskriv med ekte stemme fra Hugging Face</strong>";
+                labelCustom.innerHTML = "⚠️ <strong>Overskriv med ny opplastet lydfil</strong>";
+                
+                // Sett behold som standard for å unngå overskriving ved et uhell!
+                const keepRadio = document.querySelector('input[name="voice_source"][value="keep"]');
+                if (keepRadio) keepRadio.checked = true;
+            } else {
+                alertBox.style.display = 'none';
+                optKeep.style.display = 'none';
+                if (labelMixer) labelMixer.innerHTML = "🎤 <strong>Ta opp direkte fra miksebord / mikrofon (Bruk kirkesalen)</strong>";
+                labelHf.innerHTML = "🤗 <strong>Ekte menneskestemme fra Hugging Face (Katalog med 44 språk)</strong>";
+                labelCustom.innerHTML = "📁 <strong>Last opp ferdig innspilt lydfil (WAV/MP3)</strong>";
+                
+                // Sett Hugging Face som standardvalg
+                const hfRadio = document.querySelector('input[name="voice_source"][value="hf"]');
+                if (hfRadio) hfRadio.checked = true;
+            }
+            onVoiceSourceChange();
+        }
+
+        function onVoiceSourceChange() {
+            const selected = document.querySelector('input[name="voice_source"]:checked')?.value || 'keep';
+            const uploadBox = document.getElementById('uploadInputBox');
+            const hfNotice = document.getElementById('hfNotice');
+            const mixerBox = document.getElementById('mixerRecordingBox');
+            
+            if (selected === 'hf') {
+                stopLiveVuMeter();
+                hfNotice.style.display = 'block';
+                uploadBox.style.display = 'none';
+                if (mixerBox) mixerBox.style.display = 'none';
+            } else if (selected === 'custom') {
+                stopLiveVuMeter();
+                hfNotice.style.display = 'none';
+                uploadBox.style.display = 'block';
+                if (mixerBox) mixerBox.style.display = 'none';
+            } else if (selected === 'mixer') {
+                hfNotice.style.display = 'none';
+                uploadBox.style.display = 'none';
+                if (mixerBox) mixerBox.style.display = 'block';
+                startLiveVuMeter();
+            } else {
+                stopLiveVuMeter();
+                hfNotice.style.display = 'none';
+                uploadBox.style.display = 'none';
+                if (mixerBox) mixerBox.style.display = 'none';
+            }
+        }
+
+        function startCountdownAndRecord() {
+            stopLiveVuMeter();
+            const idleControls = document.getElementById('mixerIdleControls');
+            const countdownOverlay = document.getElementById('mixerCountdownOverlay');
+            const countdownDisplay = document.getElementById('countdownDisplay');
+            const previewBox = document.getElementById('mixerPreviewBox');
+            
+            idleControls.style.display = 'none';
+            previewBox.style.display = 'none';
+            countdownOverlay.style.display = 'block';
+            
+            let count = 3;
+            countdownDisplay.className = "countdown-number";
+            countdownDisplay.innerText = "3";
+            
+            const countTimer = setInterval(async () => {
+                count--;
+                if (count === 2) {
+                    countdownDisplay.innerText = "2";
+                } else if (count === 1) {
+                    countdownDisplay.innerText = "1";
+                } else if (count === 0) {
+                    countdownDisplay.className = "countdown-number countdown-kjor";
+                    countdownDisplay.innerText = "KJØR! 🎙️";
+                } else if (count < 0) {
+                    clearInterval(countTimer);
+                    countdownOverlay.style.display = 'none';
+                    await beginMixerRecording();
+                }
+            }, 1000);
+        }
+
+        async function beginMixerRecording() {
+            const recPanel = document.getElementById('mixerRecordingActive');
+            const progressFill = document.getElementById('mixerProgressFill');
+            const timeElapsed = document.getElementById('mixerTimeElapsed');
+            
+            try {
+                const res = await fetch(`${apiBase()}/api/admin/start_mixer_recording`, { method: 'POST' });
+                if (!res.ok) {
+                    const err = await res.json();
+                    alert("Kunne ikke starte opptak: " + (err.error || "Ukjent feil"));
+                    resetMixerRecording();
+                    return;
+                }
+            } catch (e) {
+                alert("Nettverksfeil mot serveren.");
+                resetMixerRecording();
+                return;
+            }
+
+            recPanel.style.display = 'block';
+            progressFill.style.width = '0%';
+            timeElapsed.innerText = '00:00.0';
+            
+            mixerSecondsElapsed = 0;
+            const maxSeconds = 15;
+            
+            mixerRecordingInterval = setInterval(async () => {
+                mixerSecondsElapsed += 0.1;
+                const pct = Math.min(100, (mixerSecondsElapsed / maxSeconds) * 100);
+                progressFill.style.width = `${pct}%`;
+                
+                const secDisplay = Math.floor(mixerSecondsElapsed).toString().padStart(2, '0');
+                const tenth = Math.floor((mixerSecondsElapsed % 1) * 10);
+                timeElapsed.innerText = `00:${secDisplay}.${tenth}`;
+                
+                if (mixerSecondsElapsed >= maxSeconds) {
+                    clearInterval(mixerRecordingInterval);
+                    await stopMixerRecording();
+                }
+            }, 100);
+        }
+
+        async function stopMixerRecording() {
+            if (mixerRecordingInterval) {
+                clearInterval(mixerRecordingInterval);
+                mixerRecordingInterval = null;
+            }
+            
+            const recPanel = document.getElementById('mixerRecordingActive');
+            const previewBox = document.getElementById('mixerPreviewBox');
+            const audioElem = document.getElementById('mixerAudioElement');
+            const durationSpan = document.getElementById('mixerSampleDuration');
+            
+            recPanel.style.display = 'none';
+            
+            try {
+                const res = await fetch(`${apiBase()}/api/admin/stop_mixer_recording`, { method: 'POST' });
+                const data = await res.json();
+                
+                if (res.ok && data.status === 'success') {
+                    recordedAudioReady = true;
+                    durationSpan.innerText = data.duration;
+                    audioElem.src = `${apiBase()}${data.preview_url}?_=${Date.now()}`;
+                    previewBox.style.display = 'block';
+                } else {
+                    alert("Feil under opptak: " + (data.error || "Opptaket ble ikke lagret"));
+                    resetMixerRecording();
+                }
+            } catch (e) {
+                alert("Nettverksfeil ved stopp av opptak.");
+                resetMixerRecording();
+            }
+        }
+
+        function resetMixerRecording() {
+            if (mixerRecordingInterval) {
+                clearInterval(mixerRecordingInterval);
+                mixerRecordingInterval = null;
+            }
+            recordedAudioReady = false;
+            document.getElementById('mixerIdleControls').style.display = 'block';
+            document.getElementById('mixerCountdownOverlay').style.display = 'none';
+            document.getElementById('mixerRecordingActive').style.display = 'none';
+            document.getElementById('mixerPreviewBox').style.display = 'none';
+            const audioElem = document.getElementById('mixerAudioElement');
+            if (audioElem) {
+                audioElem.pause();
+                audioElem.src = '';
+            }
+            startLiveVuMeter();
+        }
+
+        function onPresetChange() {
+            const val = document.getElementById('langPreset').value;
+            if (!val || val === "custom") {
+                if (val === "custom") {
+                    document.getElementById('langName').value = "";
+                    document.getElementById('langCode').value = "";
+                    document.getElementById('nllbCode').value = "";
+                    document.getElementById('langName').focus();
+                }
+                checkExistingVoice(document.getElementById('langCode').value);
+                return;
+            }
+            const [code, name, nllb, tts] = val.split("|");
+            document.getElementById('langCode').value = code;
+            document.getElementById('langName').value = name;
+            document.getElementById('nllbCode').value = nllb;
+
+            checkExistingVoice(code);
+
+            // Oppdater infoboks hvis språket har ferdig Hugging Face stemme
+            const hfNotice = document.getElementById('hfNotice');
+            if (hfSupported.length === 0 || hfSupported.includes(code)) {
+                hfNotice.innerHTML = `✨ <strong>Ekte studio-stemme:</strong> Fant ekte menneskestemme for <strong>${name}</strong> på Hugging Face (Open Swara / XTTS-v2). AI-en kloner den automatisk ved lagring.`;
+                hfNotice.style.borderColor = "#4caf50";
+            } else {
+                hfNotice.innerHTML = `ℹ️ <strong>Tips:</strong> For dette språket anbefales det å ta opp fra miksebordet, laste opp en egen kort lydprøve, eller velge kun teksting.`;
+                hfNotice.style.borderColor = "#ff9800";
+            }
+        }
+
+        async function submitNewLanguage(e) {
+            e.preventDefault();
+            const btn = document.getElementById('addLangBtn');
+            const status = document.getElementById('addLangStatus');
+            const code = document.getElementById('langCode').value.trim().toLowerCase();
+            const name = document.getElementById('langName').value.trim();
+            const nllb = document.getElementById('nllbCode').value.trim();
+            const voiceSource = document.querySelector('input[name="voice_source"]:checked')?.value || 'keep';
+            const file = document.getElementById('langVoiceFile').files[0];
+
+            if (!code || !nllb) {
+                alert("Vennligst fyll ut kortkode og NLLB-kode.");
+                return;
+            }
+
+            const hasExisting = (currentLanguages[code] && (currentLanguages[code].has_voice || currentLanguages[code].voice_folder)) || availableVoicesList.includes(code);
+            let overwrite = false;
+
+            if (hasExisting && (voiceSource === 'hf' || voiceSource === 'custom' || voiceSource === 'mixer')) {
+                const conf = confirm(`Språket "${name || code}" har allerede en lokal stemmeprofil (prompt.pt).\n\nEr du helt sikker på at du vil OVERSKRIVE den eksisterende stemmen?`);
+                if (!conf) {
+                    return;
+                }
+                overwrite = true;
+            }
+
+            if (voiceSource === 'mixer' && !recordedAudioReady) {
+                alert("Vennligst start og fullfør en innlesing fra miksebordet (10–15 sekunder) før du aktiverer språket.");
+                return;
+            }
+
+            if (voiceSource === 'custom' && !file) {
+                alert("Vennligst velg en lydfil (mp3/wav) for opplasting, eller velg opptak fra miksebord / Hugging Face.");
+                return;
+            }
+
+            btn.disabled = true;
+            status.style.display = 'block';
+            status.style.backgroundColor = '#333';
+            if (voiceSource === 'mixer') {
+                status.innerHTML = '<span class="spinner"></span>Kloner stemme fra miksebord-opptaket med OmniVoice... (ca 15-20 sek på GPU)';
+            } else if (voiceSource === 'hf') {
+                status.innerHTML = '<span class="spinner"></span>Laster ned ekte menneskestemme fra Hugging Face og kloner... (ca 15-20 sek på GPU)';
+            } else if (voiceSource === 'custom') {
+                status.innerHTML = '<span class="spinner"></span>Laster opp fil og kloner stemme... (ca 15-20 sek på GPU)';
+            } else if (voiceSource === 'keep') {
+                status.innerHTML = '<span class="spinner"></span>Oppdaterer språkkonfigurasjon (beholder eksisterende stemme)...';
+            } else {
+                status.innerHTML = '<span class="spinner"></span>Aktiverer språk for teksting på skjerm...';
+            }
+
+            const formData = new FormData();
+            formData.append("lang_code", code);
+            formData.append("lang_name", name || code.toUpperCase());
+            formData.append("nllb_code", nllb);
+            formData.append("tts_lang", "en");
+            formData.append("voice_source", voiceSource);
+            formData.append("overwrite_voice", overwrite ? "true" : "false");
+            if (voiceSource === 'custom' && file) {
+                formData.append("audio_file", file);
+            }
+
+            try {
+                const res = await fetch(`${apiBase()}/api/admin/add_language`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (res.status === 409) {
+                    alert(data.error);
+                    checkExistingVoice(code);
+                    return;
+                }
+
+                if (res.ok && data.status === "success") {
+                    status.style.backgroundColor = '#4caf50';
+                    status.textContent = data.message;
+                    document.getElementById('newLanguageForm').reset();
+                    document.getElementById('langPreset').value = "";
+                    resetMixerRecording();
+                    checkExistingVoice("");
+                    
+                    // Oppdater listen og oppdater iframen
+                    await fetchHwStatus();
+                    reloadIframe();
+                } else {
+                    status.style.backgroundColor = '#f44336';
+                    status.textContent = "Feil: " + (data.error || "Kunne ikke legge til språk");
+                }
+            } catch (err) {
+                status.style.backgroundColor = '#f44336';
+                status.textContent = "Nettverksfeil mot serveren.";
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function deleteLanguage(code, name) {
+            if (currentLanguages && Object.keys(currentLanguages).length <= 1) {
+                alert("Du kan ikke slette det siste gjenværende språket i systemet.");
+                return;
+            }
+
+            if (!confirm(`Er du sikker på at du vil fjerne språket "${name}" (${code}) fra systemet?`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`${apiBase()}/api/admin/delete_language`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lang_code: code })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    await fetchHwStatus();
+                    reloadIframe();
+                } else {
+                    alert("Feil: " + (data.error || "Kunne ikke slette språk"));
+                }
+            } catch (err) {
+                alert("Nettverksfeil");
+            }
+        }
+
+        function reloadIframe() {
+            try {
+                const iframe = document.querySelector('.control-panel-iframe');
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.location.reload();
+                }
+            } catch (e) {}
+        }
+
+        function checkWarning() {
+            const chInput = document.getElementById('channels');
+            const warnBox = document.getElementById('gpu-warning');
+            if (parseInt(chInput.value) > 2) {
+                warnBox.style.display = 'block';
+            } else {
+                warnBox.style.display = 'none';
+            }
+        }
+        
+        document.getElementById('channels').addEventListener('input', checkWarning);
+
+        async function setChannels() {
+            const val = document.getElementById('channels').value;
+            try {
+                const res = await fetch(`${apiBase()}/api/admin/set_hw_channels`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ active_channels: val })
+                });
+                if (res.ok) {
+                    alert("Oppdatert! Kontrollpanelet på mobilen og til høyre er nå synkronisert.");
+                    reloadIframe();
+                } else {
+                    const data = await res.json();
+                    alert("Feil: " + data.error);
+                }
+            } catch (e) { alert("Nettverksfeil"); }
+        }
+
+        // --- FLERSPORS LYDOPPTAK (TALE + TOLK) ---
+        let multitrackTimerInterval = null;
+        let multitrackElapsedSeconds = 0;
+        let isMultitrackRecording = false;
+
+        function scrollToRecordingSection() {
+            const sec = document.getElementById('multitrackRecordingSection');
+            if (sec) {
+                sec.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        async function fetchRecordingStatus() {
+            try {
+                const res = await fetch(`${apiBase()}/api/recording/status?_=${Date.now()}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                
+                isMultitrackRecording = data.is_recording;
+                const topBadge = document.getElementById('topRecBadge');
+                const topTimer = document.getElementById('topRecTimer');
+                const secBadge = document.getElementById('sectionRecStatusBadge');
+                const idleBox = document.getElementById('recControlIdle');
+                const activeBox = document.getElementById('recControlActive');
+                const tracksList = document.getElementById('recordingTracksList');
+                const timerBig = document.getElementById('recTimerBig');
+                const descElem = document.getElementById('recActiveTracksDesc');
+
+                if (data.is_recording) {
+                    topBadge.style.display = 'inline-flex';
+                    topTimer.innerText = data.elapsed_formatted || "00:00";
+                    secBadge.innerText = "🔴 TAR OPP NÅ";
+                    secBadge.style.color = "#ff5252";
+                    secBadge.style.fontWeight = "bold";
+
+                    idleBox.style.display = 'none';
+                    activeBox.style.display = 'block';
+                    timerBig.innerText = data.elapsed_formatted || "00:00";
+
+                    multitrackElapsedSeconds = data.elapsed_seconds || 0;
+                    if (!multitrackTimerInterval) {
+                        multitrackTimerInterval = setInterval(() => {
+                            multitrackElapsedSeconds += 1;
+                            const m = Math.floor(multitrackElapsedSeconds / 60).toString().padStart(2, '0');
+                            const s = Math.floor(multitrackElapsedSeconds % 60).toString().padStart(2, '0');
+                            const timeStr = `${m}:${s}`;
+                            timerBig.innerText = timeStr;
+                            topTimer.innerText = timeStr;
+                        }, 1000);
+                    }
+
+                    if (data.tracks && data.tracks.length > 0) {
+                        renderTracksPills(data.tracks, tracksList);
+                        descElem.innerText = `Tar opp ${data.tracks.length} spor (${data.tracks.map(t => t.name).join(', ')})`;
+                    }
+                } else {
+                    topBadge.style.display = 'none';
+                    secBadge.innerText = "Klar";
+                    secBadge.style.color = "#aaa";
+                    secBadge.style.fontWeight = "normal";
+
+                    idleBox.style.display = 'block';
+                    activeBox.style.display = 'none';
+
+                    if (multitrackTimerInterval) {
+                        clearInterval(multitrackTimerInterval);
+                        multitrackTimerInterval = null;
+                    }
+
+                    if (data.preview_tracks) {
+                        renderTracksPills(data.preview_tracks, tracksList);
+                    }
+                }
+
+                if (data.last_recording && !data.is_recording) {
+                    renderLastRecordingResult(data.last_recording);
+                } else if (!data.last_recording) {
+                    clearRecordingPreview();
+                }
+            } catch (e) {
+                console.error("Feil ved henting av opptaksstatus:", e);
+            }
+        }
+
+        function renderTracksPills(tracks, container) {
+            if (!container) return;
+            container.innerHTML = "";
+            tracks.forEach((t, i) => {
+                const pill = document.createElement('div');
+                pill.className = `track-pill ${t.type === 'mic' ? 'track-pill-mic' : 'track-pill-tts'}`;
+                
+                const icon = t.type === 'mic' ? '🎙️' : '🎧';
+                const typeLabel = t.type === 'mic' ? 'Tale inn (Mikrofon)' : 'Tolkestemme (TTS)';
+                
+                pill.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span>${icon}</span>
+                        <span class="track-num">Spor ${i + 1}: ${t.name}</span>
+                    </div>
+                    <span class="track-lang">${typeLabel}</span>
+                `;
+                container.appendChild(pill);
+            });
+        }
+
+        let currentLastRecordingId = null;
+
+        function closeAudioPreview() {
+            const container = document.getElementById('recPreviewContainer');
+            const audio = document.getElementById('recPreviewAudio');
+            if (audio) {
+                audio.pause();
+                audio.removeAttribute('src');
+                audio.load();
+            }
+            if (container) {
+                container.style.display = 'none';
+            }
+            const titleElem = document.getElementById('recPreviewTitle');
+            if (titleElem) {
+                titleElem.innerText = "";
+            }
+        }
+
+        function clearRecordingPreview(deletedId = null) {
+            // Hvis slettet opptak er det som vises i resultatboksen (eller hvis vi nullstiller generelt):
+            if (!deletedId || currentLastRecordingId === deletedId) {
+                const resBox = document.getElementById('recResultBox');
+                if (resBox) resBox.style.display = 'none';
+                const stemsContainer = document.getElementById('recStemsList');
+                if (stemsContainer) stemsContainer.innerHTML = "";
+                currentLastRecordingId = null;
+            }
+
+            // Sjekk om det slettede opptaket er lastet i lydavspilleren
+            const audio = document.getElementById('recPreviewAudio');
+            if (audio) {
+                const isCurrentAudioDeleted = !deletedId || 
+                    (audio.src && (audio.src.includes(encodeURIComponent(deletedId)) || audio.src.includes(deletedId)));
+                if (isCurrentAudioDeleted) {
+                    closeAudioPreview();
+                }
+            }
+        }
+
+        async function deleteLastRecording() {
+            if (!currentLastRecordingId) return;
+            await deleteArchivedRecording(currentLastRecordingId);
+        }
+
+        async function startMultitrackRecording() {
+            const btn = document.getElementById('btnStartRecording');
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner"></span> Starter opptak...`;
+
+            try {
+                const res = await fetch(`${apiBase()}/api/recording/start`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                if (res.ok && data.status === 'recording') {
+                    clearRecordingPreview();
+                    await fetchRecordingStatus();
+                } else {
+                    alert("Kunne ikke starte opptak: " + (data.error || data.message || "Ukjent feil"));
+                }
+            } catch (e) {
+                alert("Nettverksfeil ved start av opptak: " + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<span class="rec-dot" style="width: 12px; height: 12px;"></span><span>Start Flersporsopptak</span>`;
+            }
+        }
+
+        async function stopMultitrackRecording() {
+            const btn = document.getElementById('btnStopRecording');
+            const savingStatus = document.getElementById('recSavingStatus');
+            btn.disabled = true;
+            savingStatus.style.display = 'block';
+
+            if (multitrackTimerInterval) {
+                clearInterval(multitrackTimerInterval);
+                multitrackTimerInterval = null;
+            }
+
+            try {
+                const res = await fetch(`${apiBase()}/api/recording/stop`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                savingStatus.style.display = 'none';
+
+                if (res.ok && data.status === 'success') {
+                    renderLastRecordingResult(data.info);
+                    fetchRecordingArchive();
+                    await fetchRecordingStatus();
+                } else {
+                    alert("Feil ved lagring av opptak: " + (data.error || "Ukjent feil"));
+                }
+            } catch (e) {
+                savingStatus.style.display = 'none';
+                alert("Nettverksfeil ved stopping av opptak: " + e.message);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function renderLastRecordingResult(info) {
+            const resBox = document.getElementById('recResultBox');
+            if (!resBox || !info) {
+                clearRecordingPreview();
+                return;
+            }
+
+            currentLastRecordingId = info.id || null;
+
+            document.getElementById('recResultDuration').innerText = `Varighet: ${info.duration_formatted} (${info.channels_count} spor)`;
+            document.getElementById('recResultFilename').innerText = info.multitrack_filename;
+            document.getElementById('recResultSize').innerText = `${info.multitrack_size_mb} MB`;
+
+            const dlMaster = document.getElementById('btnDownloadMaster');
+            dlMaster.href = `${apiBase()}${info.multitrack_download_url}`;
+            dlMaster.setAttribute('download', info.multitrack_filename);
+            dlMaster.innerHTML = `🎛️ Last ned Komplett Flersporsopptak (${info.channels_count} spor WAV - ${info.multitrack_size_mb} MB)`;
+
+            const stemsContainer = document.getElementById('recStemsList');
+            stemsContainer.innerHTML = "";
+
+            if (info.tracks && info.tracks.length > 0) {
+                info.tracks.forEach(trk => {
+                    const row = document.createElement('div');
+                    row.className = 'stem-row';
+                    row.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-weight: bold; color: #fff;">Spor ${trk.track_index}:</span>
+                            <span style="color: #ddd;">${trk.name}</span>
+                            <span style="font-size: 0.75rem; color: #888;">(${trk.size_mb} MB)</span>
+                        </div>
+                        <div class="stem-actions">
+                            <button type="button" class="btn-stem-play" onclick="previewStemAudio('${apiBase()}${trk.stream_url}', '${trk.name}')">▶ Lytt</button>
+                            <a class="btn-stem-dl" href="${apiBase()}${trk.download_url}" download="${trk.filename}">⬇ WAV</a>
+                        </div>
+                    `;
+                    stemsContainer.appendChild(row);
+                });
+            }
+
+            resBox.style.display = 'block';
+        }
+
+        function previewStemAudio(url, title) {
+            const container = document.getElementById('recPreviewContainer');
+            const titleElem = document.getElementById('recPreviewTitle');
+            const audio = document.getElementById('recPreviewAudio');
+            
+            titleElem.innerText = `🎧 Forhåndslytter til: ${title}`;
+            audio.src = url;
+            container.style.display = 'block';
+            audio.play().catch(e => console.log("Auto-play forhåndslytting:", e));
+        }
+
+        function openArchivedRecording(rec) {
+            if (!rec) return;
+            renderLastRecordingResult(rec);
+            const sec = document.getElementById('recResultBox');
+            if (sec) {
+                sec.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        let isArchiveOpen = true;
+        function toggleArchiveVisibility() {
+            const container = document.getElementById('archiveContainer');
+            const icon = document.getElementById('archiveToggleIcon');
+            isArchiveOpen = !isArchiveOpen;
+            container.style.display = isArchiveOpen ? 'block' : 'none';
+            icon.innerText = isArchiveOpen ? 'Skjul ▲' : 'Vis ▼';
+            if (isArchiveOpen) {
+                fetchRecordingArchive();
+            }
+        }
+
+        async function fetchRecordingArchive() {
+            try {
+                const res = await fetch(`${apiBase()}/api/recording/list?_=${Date.now()}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                const list = document.getElementById('archiveList');
+                const countBadge = document.getElementById('archiveCount');
+                
+                countBadge.innerText = data.recordings ? data.recordings.length : 0;
+                list.innerHTML = "";
+
+                if (!data.recordings || data.recordings.length === 0) {
+                    list.innerHTML = `<div style="color: #777; font-size: 0.85rem; text-align: center; padding: 10px;">Ingen tidligere opptak lagret ennå.</div>`;
+                    return;
+                }
+
+                data.recordings.forEach(rec => {
+                    const card = document.createElement('div');
+                    card.className = 'archive-card';
+                    const trkSummary = rec.tracks ? rec.tracks.map(t => t.name).join(', ') : `${rec.channels_count} spor`;
+                    const recJsonEscaped = JSON.stringify(rec).replace(/'/g, "&#39;");
+                    card.innerHTML = `
+                        <div style="display: flex; flex-direction: column; gap: 3px;">
+                            <div style="font-weight: bold; font-size: 0.9rem; color: #fff;">
+                                📅 ${rec.created_at} 
+                                <span style="font-size: 0.8rem; color: #81c784; font-weight: normal; margin-left: 6px;">⏱️ ${rec.duration_formatted}</span>
+                            </div>
+                            <div style="font-size: 0.78rem; color: #aaa;">
+                                ${rec.channels_count} spor: ${trkSummary} (${rec.multitrack_size_mb} MB)
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <button type="button" class="btn-stem-play" style="padding: 4px 8px; font-size: 0.75rem;" onclick='openArchivedRecording(${recJsonEscaped})'>▶ Åpne / Lytt</button>
+                            <a class="btn-stem-dl" href="${apiBase()}${rec.multitrack_download_url}" download="${rec.multitrack_filename}">⬇ WAV</a>
+                            <button type="button" class="btn-delete" style="padding: 4px 8px; font-size: 0.75rem;" onclick="deleteArchivedRecording('${rec.id}')">Slett</button>
+                        </div>
+                    `;
+                    list.appendChild(card);
+                });
+            } catch (e) {
+                console.error("Feil ved lasting av arkiv:", e);
+            }
+        }
+
+        async function deleteArchivedRecording(id) {
+            if (!id) return;
+            if (!confirm(`Er du sikker på at du vil slette opptaket ${id}? Alle tilhørende spor og avspillingsmulighet vil bli fjernet.`)) {
+                return;
+            }
+            try {
+                const res = await fetch(`${apiBase()}/api/recording/delete/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    clearRecordingPreview(id);
+                    await fetchRecordingArchive();
+                    await fetchRecordingStatus();
+                } else {
+                    alert("Kunne ikke slette opptaket.");
+                }
+            } catch (e) {
+                alert("Nettverksfeil: " + e.message);
+            }
+        }
+        async function fetchDictionaryForPrompt() {
+            try {
+                const response = await fetch('/api/admin/dictionary');
+                if (!response.ok) throw new Error('Kunne ikke hente ordliste');
+                const data = await response.json();
+                
+                const promptBox = document.getElementById('aiPromptText');
+                const baseText = `Jeg har en JSON-ordliste for en app. Oversett de norske ordene (hovednøklene) til [SKRIV INN SPRÅK]. 
+Det er kritisk viktig at du bruker frikirkelig/kristen kontekst (f.eks: 'lammet' er 'the lamb' og 'lovsang' er 'worship').
+VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller slette noen av de eksisterende språkene ("en", "sv", "da", "uk" osv) i JSON-filen. Behold nøyaktig JSON-format. Her er listen:\n\n`;
+                
+                promptBox.value = baseText + JSON.stringify(data, null, 2);
+                
+                // Select text automatically
+                promptBox.select();
+                promptBox.setSelectionRange(0, 99999);
+                
+                // Optional: try to copy to clipboard
+                try {
+                    navigator.clipboard.writeText(promptBox.value);
+                    alert("Kopiert til utklippstavle!");
+                } catch (e) {
+                    console.log("Kopiering feilet, vennligst trykk Ctrl+C.");
+                }
+                
+            } catch (error) {
+                alert("Feil ved henting av ordliste: " + error.message);
+            }
+        }
+
+        async function saveDictionary(e) {
+            e.preventDefault();
+            const input = document.getElementById('dictionaryJsonInput').value;
+            const statusDiv = document.getElementById('dictStatus');
+            const btn = document.getElementById('btnSaveDict');
+            
+            try {
+                // Verify it's valid JSON before sending
+                const parsed = JSON.parse(input);
+                
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner"></span> Lagrer...';
+                
+                const response = await fetch('/api/admin/dictionary', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(parsed)
+                });
+                
+                const result = await response.json();
+                if (response.ok) {
+                    statusDiv.innerHTML = "✅ Ordliste oppdatert!";
+                    statusDiv.style.backgroundColor = "rgba(76, 175, 80, 0.2)";
+                    statusDiv.style.color = "#81c784";
+                    statusDiv.style.border = "1px solid #4caf50";
+                    document.getElementById('dictionaryJsonInput').value = "";
+                } else {
+                    throw new Error(result.error || "Ukjent feil");
+                }
+            } catch (error) {
+                statusDiv.innerHTML = "❌ Feil: " + error.message;
+                statusDiv.style.backgroundColor = "rgba(244, 67, 54, 0.2)";
+                statusDiv.style.color = "#ff8a80";
+                statusDiv.style.border = "1px solid #f44336";
+            }
+            
+            statusDiv.style.display = "block";
+            btn.disabled = false;
+            btn.innerHTML = '💾 Lagre Ordliste';
+            
+            setTimeout(() => {
+                statusDiv.style.display = "none";
+            }, 5000);
+        }
+
+
+        window.onload = () => {
+            fetchHwStatus();
+            fetchRecordingStatus();
+            fetchRecordingArchive();
+            setInterval(() => {
+                fetchRecordingStatus();
+                fetchHwStatus();
+            }, 2500);
+        };
+    </script>
+</body>
+</html>

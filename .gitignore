@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+venv/
+.venv/
+env/
+.env
+
+# System og IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Utgått TTS-motor (erstattet av OmniVoice)
+piper/
+
+# Store installasjonsfiler (lastes ned under oppsett)
+*.iso
+rufus*.exe
+ubuntu-*.iso
+
+# Midlertidige test-, logg- og backupfiler
+*.zip
+diff_output*.txt
+Prosjektstatus.txt
+test_da.mp3
+* - Copy.*
+*_backup.py
+remote_core_pipeline.py
+
+# Scratch og midlertidige mapper
+scratch/
