@@ -1010,14 +1010,30 @@
                 <div class="info-box">
                     Velg hvor mange uavhengige språk som skal sendes ut på de fysiske utgangene på USB-lydkortet (f.eks. Audient iD4 / Behringer U-Phoria). Kanalene rutes direkte til tolkesendere eller miksebord.
                 </div>
+
+                <div style="background-color: #222; border: 1px solid #333; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span style="font-size: 0.85rem; color: #aaa;">Tilkoblet maskinvare:</span>
+                        <span id="hwMaxChannelsBadge" style="background: rgba(76, 175, 80, 0.25); color: #81c784; border: 1px solid #4caf50; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.82rem;">2 utganger (Stereo L/R)</span>
+                    </div>
+                    <div id="hwSoundcardName" style="font-weight: bold; font-size: 0.95rem; color: #fff;">Audient iD4</div>
+                </div>
+
                 <label for="channels">Antall samtidige språk ut (Lydkort-kanaler):</label>
-                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <div style="display: flex; gap: 10px; margin-bottom: 8px;">
                     <input type="number" id="channels" min="1" max="2" value="2" style="margin-bottom: 0;">
                     <button onclick="setChannels()" class="action-btn" style="width: auto; padding: 11px 20px;">Oppdater</button>
                 </div>
+                <div id="channelLimitWarning" style="display: none; color: #ff8a80; font-size: 0.84rem; margin-bottom: 12px; line-height: 1.4;"></div>
+
                 <div id="gpu-warning" class="warning-box">
                     ⚠️ <strong>Advarsel for 3+ språk:</strong><br>
                     Sanntids tekst-til-tale (TTS) er krevende på skjermkortet. For 3 eller flere språk samtidig anbefales minst <strong>RTX 4070 Ti Super</strong>, ellers vil opplest lyd kunne henge etter. Pass også på at lydkortet har nok fysiske utganger.
+                </div>
+
+                <div style="background-color: #1a2233; border-left: 4px solid #42a5f5; padding: 12px; border-radius: 0 6px 6px 0; font-size: 0.86rem; line-height: 1.45; margin-top: 14px;">
+                    ℹ️ <strong>Hvorfor ikke 4 utganger med hovedkortets lydbrikke?</strong><br>
+                    Hovedkortet har en innebygd Intel-lydbrikke, men den er fabrikkdeaktivert i BIOS på denne PC-en for å unngå enhetskollisjon med GPU og USB. For å rute 3 eller 4 uavhengige tolkespråk til separate tolkesendere anbefales et 4-kanals USB-lydkort (f.eks. Behringer U-Phoria UMC404HD).
                 </div>
             </div>
 
@@ -1304,7 +1320,17 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
                 const hwMax = config.hw_max_channels || 2;
                 const chInput = document.getElementById('channels');
                 chInput.max = hwMax;
-                chInput.value = config.active_tts_channels || 2;
+                if (document.activeElement !== chInput) {
+                    chInput.value = config.active_tts_channels || 2;
+                }
+                const cardNameElem = document.getElementById('hwSoundcardName');
+                if (cardNameElem && config.audio_message) {
+                    cardNameElem.textContent = config.audio_message;
+                }
+                const maxBadge = document.getElementById('hwMaxChannelsBadge');
+                if (maxBadge) {
+                    maxBadge.textContent = `${hwMax} utganger (${hwMax === 2 ? 'Stereo L/R' : hwMax + ' kanaler'})`;
+                }
                 checkWarning();
 
                 // Håndter støttede Hugging Face språk
@@ -1803,27 +1829,59 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
 
         function reloadIframe() {
             try {
-                const iframe = document.querySelector('.control-panel-iframe');
-                if (iframe && iframe.contentWindow) {
-                    iframe.contentWindow.location.reload();
-                }
+                const iframes = document.querySelectorAll('.control-panel-iframe');
+                iframes.forEach(iframe => {
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.location.reload();
+                    }
+                });
             } catch (e) {}
         }
 
         function checkWarning() {
             const chInput = document.getElementById('channels');
             const warnBox = document.getElementById('gpu-warning');
-            if (parseInt(chInput.value) > 2) {
-                warnBox.style.display = 'block';
-            } else {
-                warnBox.style.display = 'none';
+            const limitWarn = document.getElementById('channelLimitWarning');
+            const val = parseInt(chInput.value, 10) || 1;
+            const hwMax = parseInt(chInput.max, 10) || 2;
+
+            if (limitWarn) {
+                if (val > hwMax) {
+                    limitWarn.style.display = 'block';
+                    limitWarn.innerHTML = `⚠️ <strong>For få utganger:</strong> Tilkoblet lydkort har kun <strong>${hwMax}</strong> fysiske utganger. Maks ${hwMax} kan benyttes.`;
+                } else {
+                    limitWarn.style.display = 'none';
+                }
+            }
+
+            if (warnBox) {
+                if (val > 2) {
+                    warnBox.style.display = 'block';
+                } else {
+                    warnBox.style.display = 'none';
+                }
             }
         }
         
         document.getElementById('channels').addEventListener('input', checkWarning);
 
         async function setChannels() {
-            const val = document.getElementById('channels').value;
+            const chInput = document.getElementById('channels');
+            const val = parseInt(chInput.value, 10);
+            const hwMax = parseInt(chInput.max, 10) || 2;
+
+            if (isNaN(val) || val < 1) {
+                alert("Vennligst oppgi et gyldig tall (minst 1 kanal).");
+                return;
+            }
+
+            if (val > hwMax) {
+                alert(`⚠️ For få fysiske lydutganger!\n\nTilkoblet lydkort har kun ${hwMax} fysiske utganger.\nFor å sende ut ${val} separate tolkespråk samtidig kreves et flerkanals USB-lydkort med minst ${val} fysiske utganger (f.eks. Behringer U-Phoria UMC404HD).\n\n(Hovedkortets innebygde lydbrikke er for tiden deaktivert i BIOS).`);
+                chInput.value = hwMax;
+                checkWarning();
+                return;
+            }
+
             try {
                 const res = await fetch(`${apiBase()}/api/admin/set_hw_channels`, {
                     method: 'POST',
@@ -1831,13 +1889,13 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
                     body: JSON.stringify({ active_channels: val })
                 });
                 if (res.ok) {
-                    alert("Oppdatert! Kontrollpanelet på mobilen og til høyre er nå synkronisert.");
+                    alert("Oppdatert! Kontrollpanelet på mobilen og under fanen «Tolkestyring» er nå synkronisert.");
                     reloadIframe();
                 } else {
                     const data = await res.json();
-                    alert("Feil: " + data.error);
+                    alert("Kunne ikke oppdatere lydkanaler: " + (data.error || "Ukjent feil"));
                 }
-            } catch (e) { alert("Nettverksfeil"); }
+            } catch (e) { alert("Nettverksfeil mot tolkeserveren."); }
         }
 
         // --- FLERSPORS LYDOPPTAK (TALE + TOLK) ---

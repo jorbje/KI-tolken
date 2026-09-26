@@ -590,9 +590,7 @@ class AudioPipeline:
                     avail_text = [k for k, v in self.languages.items() if v.get("enabled", True)]
                     self.config["texting"] = "no" if "no" in avail_text else (avail_text[0] if avail_text else "no")
 
-            # Valider og overfør tolkespråk for opptil 16 kanaler med automatisk erstatning hvis et språk er borte
-            assigned_langs = set()
-            active_channels = self.config.get("active_tts_channels", 2)
+            # Valider og overfør tolkespråk for opptil 16 kanaler med fallback til "off" hvis et språk er deaktivert eller slettet
             needs_resave = False
             for i in range(1, 17):
                 k = f"tts_ch{i}"
@@ -602,12 +600,9 @@ class AudioPipeline:
                         is_valid = (val in self.languages and self.languages[val].get("enabled", True))
                         if is_valid:
                             self.config[k] = val
-                            assigned_langs.add(val)
                         else:
-                            replacement = self.get_fallback_voice_language(exclude_codes=assigned_langs | {val})
-                            print(f"[System] Lagret tolkespråk for {k} ('{val}') er deaktivert eller finnes ikke. Valgte automatisk '{replacement}'.")
-                            self.config[k] = replacement
-                            assigned_langs.add(replacement)
+                            print(f"[System] Lagret tolkespråk for {k} ('{val}') er deaktivert eller finnes ikke lenger. Settes til 'off' (Av).")
+                            self.config[k] = "off"
                             needs_resave = True
                     else:
                         self.config[k] = "off"
@@ -1360,13 +1355,11 @@ class AudioPipeline:
         
         gyldige_kategorier = ["source", "texting"] + [f"tts_ch{i}" for i in range(1, 17)]
         if category in gyldige_kategorier:
-            # Sikre at hvis et deaktivert eller ukjent språk forespørres, faller vi automatisk tilbake til et gyldig språk
+            # Sikre at hvis et deaktivert eller ukjent språk forespørres, faller vi automatisk tilbake til 'off' (Av)
             if category.startswith("tts_ch") and lang != "off":
                 if lang not in self.languages or not self.languages[lang].get("enabled", True):
-                    assigned = {self.config.get(f"tts_ch{j}") for j in range(1, 17) if f"tts_ch{j}" != category and self.config.get(f"tts_ch{j}") != "off"}
-                    fallback = self.get_fallback_voice_language(exclude_codes=assigned | {lang})
-                    print(f"[API] Språk '{lang}' er ikke tilgjengelig for {category}. Bytter automatisk til '{fallback}'.")
-                    lang = fallback
+                    print(f"[API] Språk '{lang}' er ikke tilgjengelig for {category}. Settes til 'off' (Av).")
+                    lang = "off"
             elif category == "texting" and lang != "uoversatt":
                 if lang not in self.languages or not self.languages[lang].get("enabled", True):
                     active_langs = [k for k, v in self.languages.items() if v.get("enabled", True)]
@@ -1466,9 +1459,12 @@ class AudioPipeline:
         try:
             data = await request.json()
             channels = int(data.get("active_channels", 2))
-            
-            if channels < 1 or channels > self.config["hw_max_channels"]:
-                return web.json_response({"error": f"Må være mellom 1 og {self.config['hw_max_channels']}"}, status=400, headers=self._API_HEADERS)
+            hw_max = self.config.get("hw_max_channels", 2)
+            if channels < 1 or channels > hw_max:
+                card_name = self.config.get("audio_message", "tilkoblet lydkort")
+                return web.json_response({
+                    "error": f"Tilkoblet lydkort ({card_name}) har kun {hw_max} fysiske utganger. For å sende ut {channels} samtidige tolkespråk må et flerkanals USB-lydkort med minst {channels} utganger kobles til."
+                }, status=400, headers=self._API_HEADERS)
                 
             self.config["active_tts_channels"] = channels
             self.save_settings()
@@ -1916,21 +1912,11 @@ class AudioPipeline:
                 self.config["texting"] = fallback_lang
                 print(f"[Admin] Teksting var satt til slettet språk '{lang_code}', tilbakestilt til '{fallback_lang}'.")
                 
-            # Samle inn språk som allerede er i bruk på de andre kanalene
-            assigned = set()
-            for j in range(1, 17):
-                k = f"tts_ch{j}"
-                val = self.config.get(k, "off")
-                if val != "off" and val != lang_code:
-                    assigned.add(val)
-
             for i in range(1, 17):
                 ch_key = f"tts_ch{i}"
                 if self.config.get(ch_key) == lang_code:
-                    replacement = self.get_fallback_voice_language(exclude_codes=assigned | {lang_code})
-                    self.config[ch_key] = replacement
-                    assigned.add(replacement)
-                    print(f"[Admin] TTS-kanal {i} var satt til slettet språk '{lang_code}'. Nytt språk automatisk valgt: '{replacement}'.")
+                    self.config[ch_key] = "off"
+                    print(f"[Admin] TTS-kanal {i} var satt til slettet språk '{lang_code}', satt til 'off' (Av).")
                     
             if self.config.get("source") == lang_code:
                 avail_whisper = [k for k in self.whisper_models.keys() if k in remaining_langs]
@@ -1981,21 +1967,11 @@ class AudioPipeline:
                     self.config["texting"] = fallback_lang
                     print(f"[Admin] Teksting var satt til deaktivert språk '{lang_code}', tilbakestilt til '{fallback_lang}'.")
                     
-                # Samle inn språk som allerede er i bruk på de andre kanalene
-                assigned = set()
-                for j in range(1, 17):
-                    k = f"tts_ch{j}"
-                    val = self.config.get(k, "off")
-                    if val != "off" and val != lang_code:
-                        assigned.add(val)
-
                 for i in range(1, 17):
                     ch_key = f"tts_ch{i}"
                     if self.config.get(ch_key) == lang_code:
-                        replacement = self.get_fallback_voice_language(exclude_codes=assigned | {lang_code})
-                        self.config[ch_key] = replacement
-                        assigned.add(replacement)
-                        print(f"[Admin] TTS-kanal {i} var satt til deaktivert språk '{lang_code}'. Nytt språk automatisk valgt: '{replacement}'.")
+                        self.config[ch_key] = "off"
+                        print(f"[Admin] TTS-kanal {i} var satt til deaktivert språk '{lang_code}', satt til 'off' (Av).")
                         
                 if self.config.get("source") == lang_code:
                     avail_whisper = [k for k in self.whisper_models.keys() if k in remaining_active]
