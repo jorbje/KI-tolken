@@ -21,7 +21,7 @@
     "tts_lang": "en",
     "voice_folder": "svensk",
     "has_voice": true,
-    "enabled": true
+    "enabled": false
   },
   "da": {
     "name": "Dansk",
@@ -29,7 +29,7 @@
     "tts_lang": "da",
     "voice_folder": "dansk",
     "has_voice": true,
-    "enabled": true
+    "enabled": false
   },
   "uk": {
     "name": "Ukrainsk",
@@ -52,76 +52,109 @@
     "nllb": "rus_Cyrl",
     "tts_lang": "ru",
     "voice_folder": "ru",
-    "has_voice": true
+    "has_voice": true,
+    "enabled": true
   },
   "pl": {
     "name": "Polsk",
     "nllb": "pol_Latn",
     "tts_lang": "pl",
     "voice_folder": "pl",
-    "has_voice": true
+    "has_voice": true,
+    "enabled": false
   },
   "ar": {
     "name": "Arabisk",
     "nllb": "arb_Arab",
     "tts_lang": "ar",
     "voice_folder": "ar",
-    "has_voice": true
+    "has_voice": true,
+    "enabled": false
   },
   "de": {
     "name": "Tysk",
     "nllb": "deu_Latn",
     "tts_lang": "de",
     "voice_folder": "de",
-    "has_voice": true
+    "has_voice": true,
+    "enabled": false
   },
   "fr": {
     "name": "Fransk",
     "nllb": "fra_Latn",
     "tts_lang": "fr",
     "voice_folder": "fr",
-    "has_voice": true
+    "has_voice": true,
+    "enabled": false
   },
   "it": {
     "name": "Italiensk",
     "nllb": "ita_Latn",
     "tts_lang": "it",
     "voice_folder": "it",
-    "has_voice": true
+    "has_voice": true,
+    "enabled": false
   },
   "nl": {
     "name": "Nederlandsk",
     "nllb": "nld_Latn",
     "tts_lang": "nl",
     "voice_folder": "nl",
-    "has_voice": true
+    "has_voice": true,
+    "enabled": false
   },
   "pt": {
     "name": "Portugisisk",
     "nllb": "por_Latn",
     "tts_lang": "pt",
     "voice_folder": "pt",
-    "has_voice": true
+    "has_voice": true,
+    "enabled": false
   },
   "tr": {
     "name": "Tyrkisk",
     "nllb": "tur_Latn",
     "tts_lang": "tr",
     "voice_folder": "tr",
-    "has_voice": true
+    "has_voice": true,
+    "enabled": false
   },
   "sw": {
     "name": "Swahili",
     "nllb": "swh_Latn",
     "tts_lang": "sw",
     "voice_folder": "sw",
-    "has_voice": true
+    "has_voice": true,
+    "enabled": true
   },
   "zh": {
     "name": "Kinesisk",
     "nllb": "zho_Hans",
     "tts_lang": "zh",
     "voice_folder": "zh",
+    "has_voice": true,
+    "enabled": false
+  },
+  "ur": {
+    "name": "Urdu",
+    "nllb": "urd_Arab",
+    "tts_lang": "ur",
+    "voice_folder": "ur",
+    "has_voice": true,
+    "enabled": true
+  },
+  "pa": {
+    "name": "Punjabi",
+    "nllb": "pan_Guru",
+    "tts_lang": "pa",
+    "voice_folder": "pa",
+    "has_voice": true
+  },
+  "so": {
+    "name": "Somali",
+    "nllb": "som_Latn",
+    "tts_lang": "so",
+    "voice_folder": "so",
     "has_voice": true
   }
 }

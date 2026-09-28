@@ -891,7 +891,7 @@
             <select id="langPreset" onchange="onPresetChange()">
                 <option value="">-- Velg et språk eller fyll ut manuelt --</option>
                 
-                <optgroup label="📦 Ferdig installerte stemmer (Pakke med 17 lokale stemmer - 100% offline)">
+                <optgroup label="📦 Ferdig installerte stemmer (Pakke med 20 lokale stemmer - 100% offline)">
                     <option value="no|Norsk|nob_Latn|no">🇳🇴 Norsk (Bokmål)</option>
                     <option value="en|Engelsk|eng_Latn|en">🇬🇧 Engelsk (English)</option>
                     <option value="pl|Polsk|pol_Latn|pl">🇵🇱 Polsk (Polski)</option>
@@ -909,19 +909,20 @@
                     <option value="zh|Kinesisk|zho_Hans|zh">🇨🇳 Kinesisk (forenklet) (中文)</option>
                     <option value="sv|Svensk|swe_Latn|sv">🇸🇪 Svensk (Svenska)</option>
                     <option value="da|Dansk|dan_Latn|da">🇩🇰 Dansk (Dansk)</option>
+                    <option value="ur|Urdu|urd_Arab|ur">🇵🇰 Urdu (اردو)</option>
+                    <option value="pa|Punjabi|pan_Guru|pa">🇮🇳/🇵🇰 Punjabi (ਪੰਜਾਬੀ)</option>
+                    <option value="so|Somali|som_Latn|so">🇸🇴 Somali (Soomaali)</option>
                 </optgroup>
 
                 <optgroup label="🌍 Flere innvandrerspråk (Søk på Hugging Face eller lag med Gemini KI)">
                     <option value="fa|Farsi / Persisk|pes_Arab|fa">🇮🇷 Farsi / Persisk (فارسی)</option>
                     <option value="ti|Tigrinja|tir_Ethi|ti">🇪🇷 Tigrinja (ትግርኛ)</option>
-                    <option value="so|Somali|som_Latn|so">🇸🇴 Somalisk (Soomaali)</option>
                     <option value="ro|Rumensk|ron_Latn|ro">🇷🇴 Rumensk (Română)</option>
                     <option value="lt|Litauisk|lit_Latn|lt">🇱🇹 Litauisk (Lietuvių)</option>
                     <option value="tl|Tagalog / Filippinsk|tgl_Latn|tl">🇵🇭 Tagalog / Filippinsk</option>
                     <option value="vi|Vietnamesisk|vie_Latn|vi">🇻🇳 Vietnamesisk (Tiếng Việt)</option>
                     <option value="ckb|Kurdisk Sorani|ckb_Arab|ckb">☀️ Kurdisk Sorani (کوردی)</option>
                     <option value="kmr|Kurdisk Kurmanji|kmr_Latn|kmr">☀️ Kurdisk Kurmanji (Kurmancî)</option>
-                    <option value="ur|Urdu|urd_Arab|ur">🇵🇰 Urdu (اردو)</option>
                     <option value="hi|Hindi|hin_Deva|hi">🇮🇳 Hindi (हिन्दी)</option>
                     <option value="el|Gresk|ell_Grek|el">🇬🇷 Gresk (Ελληνικά)</option>
                     <option value="cs|Tsjekkisk|ces_Latn|cs">🇨🇿 Tsjekkisk (Čeština)</option>
@@ -1501,7 +1502,7 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
         let availableVoicesList = [];
         let hfSupported = [];
         let hasGeminiKey = false;
-        const PRE_INSTALLED_PACKAGES = ['no', 'en', 'pl', 'uk', 'ar', 'ru', 'es', 'de', 'fr', 'tr', 'it', 'nl', 'pt', 'sw', 'zh', 'sv', 'da'];
+        const PRE_INSTALLED_PACKAGES = ['no', 'en', 'pl', 'uk', 'ar', 'ru', 'es', 'de', 'fr', 'tr', 'it', 'nl', 'pt', 'sw', 'zh', 'sv', 'da', 'ur', 'pa', 'so'];
 
         async function fetchHwStatus() {
             try {

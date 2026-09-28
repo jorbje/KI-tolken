@@ -27,6 +27,8 @@ ubuntu-*.iso
 diff_output*.txt
 Prosjektstatus.txt
 test_da.mp3
+sample.wav
+recorded_mixer_sample.wav
 * - Copy.*
 *_backup.py
 remote_core_pipeline.py

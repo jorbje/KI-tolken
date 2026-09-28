@@ -80,7 +80,7 @@ Når `core_pipeline.py` kjører, oppretter den en lokal webserver. Koble mobilte
 ### Administrasjon og nye språk
 1. Gå til **Admin Panelet** fra en PC (`http://<IP-til-tolkemaskinen>:8080/admin`).
 2. Der kan du spesifisere **hvor mange språk** som skal tolkes samtidig (basert på lydkortets fysiske utganger).
-3. **Ferdig installert stemmepakke (17 språk, 100 % offline):** Systemet leveres ferdig installert med kvalitetssikrede, klonede stemmer for de vanligste innvandrerspråkene: Norsk, Engelsk, Svensk, Dansk, Ukrainsk, Russisk, Spansk, Polsk, Tysk, Fransk, Arabisk, Italiensk, Nederlandsk, Portugisisk, Tyrkisk, Swahili og Kinesisk.
+3. **Ferdig installert stemmepakke (20 språk, 100 % offline):** Systemet leveres ferdig installert med kvalitetssikrede, klonede stemmer for de vanligste innvandrerspråkene: Norsk, Engelsk, Svensk, Dansk, Ukrainsk, Russisk, Spansk, Polsk, Tysk, Fransk, Arabisk, Italiensk, Nederlandsk, Portugisisk, Tyrkisk, Swahili, Kinesisk, Urdu, Punjabi og Somali.
 4. **Legge til nye språk (3-delt arbeidsflyt):**
    - **Nivå 1 (Ferdig pakke):** Språk i den lokale pakken aktiveres umiddelbart med ett klikk uten opptak eller nedlasting.
    - **Nivå 2 (Hugging Face):** For nye språk søker systemet automatisk opp bekreftede studio-opptak fra Hugging Face (Open Swara / XTTS-v2).

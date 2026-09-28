@@ -1943,7 +1943,25 @@ class AudioPipeline:
             try:
                 print(f"[Admin] Genererer klonet stemme for {lang_name} ({lang_code}) fra {temp_audio_path}...")
                 async with self.whisper_lock:
-                    prompt_obj = await asyncio.to_thread(self.omnivoice.create_voice_clone_prompt, temp_audio_path)
+                    gc.collect()
+                    if torch.cuda.is_available():
+                        torch.cuda.empty_cache()
+
+                    # Send med ref_text slik at OmniVoice slipper å laste inn en ekstra ASR-modell i VRAM (unngår OOM)
+                    prompt_ref_text = None
+                    if voice_source == "gemini":
+                        prompt_ref_text = "May peace, hope, and blessing be with you all. Let love and kindness fill our hearts today and always."
+                    elif self.whisper:
+                        try:
+                            segs, _ = self.whisper.transcribe(temp_audio_path)
+                            prompt_ref_text = " ".join([s.text.strip() for s in segs]).strip()
+                        except Exception as e:
+                            print(f"[Admin] Whisper transkribering av stemmeprøve feilet: {e}")
+
+                    if not prompt_ref_text:
+                        prompt_ref_text = "May peace, hope, and blessing be with you all."
+
+                    prompt_obj = await asyncio.to_thread(self.omnivoice.create_voice_clone_prompt, temp_audio_path, ref_text=prompt_ref_text)
                     torch.save(prompt_obj, prompt_path)
                 
                 self.voice_prompts[lang_code] = torch.load(prompt_path, weights_only=False)
@@ -2223,7 +2241,10 @@ class AudioPipeline:
         "pt": "Esta é uma amostra de voz para verificar a qualidade de áudio do intérprete.",
         "tr": "Bu, yapay zeka çevirmeninin ses kalitesini kontrol etmek için bir örnektir.",
         "sw": "Huu ni sampuli ya sauti ya kuangalia ubora wa sauti ya mkalimani.",
-        "zh": "这是用于检查人工智能同声传译声音质量的测试样本。"
+        "zh": "这是用于检查人工智能同声传译声音质量的测试样本。",
+        "ur": "یہ ترجمے کے نظام میں آواز کے معیار کو جانچنے کے لیے ایک نمونہ ہے۔",
+        "pa": "ਇਹ ਲਾਈਵ ਅਨੁਵਾਦ ਪ੍ਰਣਾਲੀ ਵਿੱਚ ਆਵਾਜ਼ ਦੀ ਗੁਣਵੱਤਾ ਦੀ ਜਾਂਚ ਕਰਨ ਲਈ ਇੱਕ ਨਮੂਨਾ ਹੈ।",
+        "so": "Kani waa tijaabo cod ah oo lagu hubinayo tayada codka nidaamka turjumaada tooska ah."
     }
 
     async def api_voice_sample_handler(self, request):
