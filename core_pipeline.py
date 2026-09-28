@@ -669,6 +669,9 @@ class AudioPipeline:
                     self.config["nllb_model_setting"] = val
             self.resolve_model_profile()
 
+            if "gemini_api_key" in saved and isinstance(saved["gemini_api_key"], str):
+                self.config["gemini_api_key"] = saved["gemini_api_key"].strip()
+
             if needs_resave:
                 self.save_settings()
 
@@ -685,6 +688,7 @@ class AudioPipeline:
                 "source": self.config.get("source", "no"),
                 "texting": self.config.get("texting", "no"),
                 "nllb_model_setting": self.config.get("nllb_model_setting", "auto"),
+                "gemini_api_key": self.config.get("gemini_api_key", ""),
             }
             for i in range(1, 17):
                 data[f"tts_ch{i}"] = self.config.get(f"tts_ch{i}", "off")
@@ -1410,6 +1414,7 @@ class AudioPipeline:
         status_data["available_voices"] = list(dict.fromkeys([k for k in self.voice_prompts.keys() if self.languages.get(k, {}).get("enabled", True)]))
         status_data["available_languages"] = [k for k, v in self.languages.items() if v.get("enabled", True)]
         status_data["hf_supported_languages"] = list(HF_VOICE_SAMPLES.keys())
+        status_data["has_gemini_key"] = bool(self.config.get("gemini_api_key"))
         if getattr(self, "multitrack_recorder", None):
             status_data["recording"] = self.multitrack_recorder.get_status()
         return web.json_response(status_data, headers=self._API_HEADERS)
@@ -1814,6 +1819,8 @@ class AudioPipeline:
         tts_lang = "en"
         voice_source = "keep"
         overwrite_voice = False
+        gemini_key = ""
+        gemini_gender = "male"
         audio_data = None
         
         while True:
@@ -1830,6 +1837,10 @@ class AudioPipeline:
                 tts_lang = (await part.read()).decode().strip()
             elif part.name == "voice_source":
                 voice_source = (await part.read()).decode().strip()
+            elif part.name == "gemini_api_key":
+                gemini_key = (await part.read()).decode().strip()
+            elif part.name == "gemini_gender":
+                gemini_gender = (await part.read()).decode().strip().lower()
             elif part.name == "overwrite_voice":
                 overwrite_val = (await part.read()).decode().strip().lower()
                 overwrite_voice = overwrite_val in ["true", "1", "yes"]
@@ -1858,7 +1869,7 @@ class AudioPipeline:
         has_existing_prompt = os.path.exists(prompt_path)
 
         # Sikkerhet: Hvis språket allerede har en prompt.pt og bruker prøver å hente/laste opp/spille inn ny stemme uten bekreftelse:
-        if has_existing_prompt and voice_source in ["hf", "custom", "mixer"] and not overwrite_voice:
+        if has_existing_prompt and voice_source in ["hf", "custom", "mixer", "gemini"] and not overwrite_voice:
             return web.json_response({
                 "status": "conflict",
                 "error": f"Språket '{lang_name}' har allerede en lokal stemmeprofil (prompt.pt). Bekreft at du ønsker å overskrive den.",
@@ -1875,6 +1886,26 @@ class AudioPipeline:
                 print(f"[Admin] Benytter innspilt stemmeprøve fra miksebord ({len(audio_data)} bytes).")
             except Exception as e:
                 return web.json_response({"error": f"Kunne ikke lese innspilt lydfil: {e}"}, status=500, headers=self._API_HEADERS)
+
+        # Hvis brukeren valgte å generere AI-stemme via Gemini:
+        if voice_source == "gemini":
+            active_key = gemini_key or self.config.get("gemini_api_key", "").strip()
+            if not active_key:
+                return web.json_response({
+                    "error": "Gemini API-nøkkel mangler. Vennligst følg trinn-for-trinn veiledningen i panelet for å opprette en gratis API-nøkkel på aistudio.google.com."
+                }, status=400, headers=self._API_HEADERS)
+            
+            if gemini_key and gemini_key != self.config.get("gemini_api_key"):
+                self.config["gemini_api_key"] = gemini_key
+                self.save_settings()
+
+            try:
+                print(f"[Admin] Genererer AI-stemmeprøve for {lang_name} ({lang_code}) via Gemini (kjønn: {gemini_gender})...")
+                audio_data = await asyncio.to_thread(self.generate_gemini_sample_audio, active_key, lang_name, lang_code, gemini_gender)
+                print(f"[Admin] Gemini TTS fullført! Genererte {len(audio_data)} bytes studiokvalitet.")
+            except Exception as e:
+                print(f"[Admin] Gemini TTS feilet: {e}")
+                return web.json_response({"error": f"Gemini TTS feilet: {e}"}, status=500, headers=self._API_HEADERS)
 
         # Hvis brukeren valgte å hente ekte stemme fra Hugging Face:
         if voice_source == "hf" and (not audio_data or len(audio_data) < 100):
@@ -2082,6 +2113,99 @@ class AudioPipeline:
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500, headers=self._API_HEADERS)
 
+    def generate_gemini_sample_audio(self, api_key: str, lang_name: str, lang_code: str, voice_gender: str = "male") -> bytes:
+        """Kaller Google Gemini API for å generere en 10-15s studio-innspilling på målspråket."""
+        import base64
+        import wave
+        import io
+
+        voice_name = "Puck" if voice_gender == "male" else "Kore"
+        models_to_try = ["gemini-2.0-flash", "gemini-3.8-flash-tts", "gemini-2.5-flash"]
+        last_error = None
+
+        prompt_text = (
+            f"Please read the following greeting aloud in clear, natural, and fluent {lang_name} with a calm, warm, reverent tone: "
+            f"'May peace, hope, and blessing be with you all. Let love and kindness fill our hearts today and always.'"
+        )
+
+        for model_id in models_to_try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={api_key}"
+            payload = {
+                "contents": [{
+                    "role": "user",
+                    "parts": [{"text": prompt_text}]
+                }],
+                "generationConfig": {
+                    "responseModalities": ["AUDIO"],
+                    "speechConfig": {
+                        "voiceConfig": {
+                            "prebuiltVoiceConfig": {
+                                "voiceName": voice_name
+                            }
+                        }
+                    }
+                }
+            }
+
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"}
+            )
+
+            try:
+                with urllib.request.urlopen(req, timeout=30) as resp:
+                    resp_data = json.loads(resp.read().decode("utf-8"))
+                    candidates = resp_data.get("candidates", [])
+                    if not candidates:
+                        raise ValueError(f"Ingen respons-kandidater fra Gemini: {resp_data}")
+                    
+                    parts = candidates[0].get("content", {}).get("parts", [])
+                    for part in parts:
+                        inline = part.get("inlineData", {})
+                        if "data" in inline:
+                            mime = inline.get("mimeType", "").lower()
+                            raw_b64 = inline["data"]
+                            audio_bytes = base64.b64decode(raw_b64)
+                            
+                            # Hvis rå PCM uten WAV header (f.eks. audio/x-pcm, audio/pcm, audio/L16):
+                            if "pcm" in mime or "l16" in mime or not audio_bytes.startswith(b"RIFF"):
+                                wav_buffer = io.BytesIO()
+                                with wave.open(wav_buffer, "wb") as wf:
+                                    wf.setnchannels(1)
+                                    wf.setsampwidth(2)
+                                    wf.setframerate(24000)
+                                    wf.writeframes(audio_bytes)
+                                return wav_buffer.getvalue()
+                            else:
+                                return audio_bytes
+            except urllib.error.HTTPError as he:
+                err_body = he.read().decode("utf-8", errors="replace")
+                print(f"[Gemini] Modell {model_id} feilet ({he.code}): {err_body}")
+                last_error = f"{model_id}: HTTP {he.code} - {err_body}"
+                continue
+            except Exception as e:
+                print(f"[Gemini] Feil med {model_id}: {e}")
+                last_error = f"{model_id}: {e}"
+                continue
+
+        raise RuntimeError(f"Kunne ikke generere lyd med Gemini API: {last_error}")
+
+    async def api_set_gemini_key_handler(self, request):
+        """REST API: Lagrer Google AI Studio Gemini API-nøkkel til system_innstillinger.json."""
+        try:
+            body = await request.json()
+            key = body.get("gemini_api_key", "").strip()
+            self.config["gemini_api_key"] = key
+            self.save_settings()
+            print(f"[Admin] Oppdaterte Gemini API-nøkkel ({'Satt' if key else 'Slettet'}).")
+            return web.json_response({
+                "status": "success",
+                "has_gemini_key": bool(key)
+            }, headers=self._API_HEADERS)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500, headers=self._API_HEADERS)
+
     async def run_api_server(self):
         """Tråd 6: Kjører REST API på port 8080 for ekstern kontroll."""
         app = web.Application()
@@ -2104,6 +2228,7 @@ class AudioPipeline:
         app.router.add_post('/api/admin/dictionary', self.api_update_dictionary_handler)
         app.router.add_get('/api/admin/pronunciation', self.api_get_pronunciation_handler)
         app.router.add_post('/api/admin/pronunciation', self.api_update_pronunciation_handler)
+        app.router.add_post('/api/admin/set_gemini_key', self.api_set_gemini_key_handler)
 
         # Flerspors Lydopptak (Tale og Tolk)
         app.router.add_post('/api/recording/start', self.api_start_multitrack_recording_handler)

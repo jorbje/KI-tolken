@@ -52,7 +52,76 @@
     "nllb": "rus_Cyrl",
     "tts_lang": "ru",
     "voice_folder": "ru",
-    "has_voice": true,
-    "enabled": true
+    "has_voice": true
+  },
+  "pl": {
+    "name": "Polsk",
+    "nllb": "pol_Latn",
+    "tts_lang": "pl",
+    "voice_folder": "pl",
+    "has_voice": true
+  },
+  "ar": {
+    "name": "Arabisk",
+    "nllb": "arb_Arab",
+    "tts_lang": "ar",
+    "voice_folder": "ar",
+    "has_voice": true
+  },
+  "de": {
+    "name": "Tysk",
+    "nllb": "deu_Latn",
+    "tts_lang": "de",
+    "voice_folder": "de",
+    "has_voice": true
+  },
+  "fr": {
+    "name": "Fransk",
+    "nllb": "fra_Latn",
+    "tts_lang": "fr",
+    "voice_folder": "fr",
+    "has_voice": true
+  },
+  "it": {
+    "name": "Italiensk",
+    "nllb": "ita_Latn",
+    "tts_lang": "it",
+    "voice_folder": "it",
+    "has_voice": true
+  },
+  "nl": {
+    "name": "Nederlandsk",
+    "nllb": "nld_Latn",
+    "tts_lang": "nl",
+    "voice_folder": "nl",
+    "has_voice": true
+  },
+  "pt": {
+    "name": "Portugisisk",
+    "nllb": "por_Latn",
+    "tts_lang": "pt",
+    "voice_folder": "pt",
+    "has_voice": true
+  },
+  "tr": {
+    "name": "Tyrkisk",
+    "nllb": "tur_Latn",
+    "tts_lang": "tr",
+    "voice_folder": "tr",
+    "has_voice": true
+  },
+  "sw": {
+    "name": "Swahili",
+    "nllb": "swh_Latn",
+    "tts_lang": "sw",
+    "voice_folder": "sw",
+    "has_voice": true
+  },
+  "zh": {
+    "name": "Kinesisk",
+    "nllb": "zho_Hans",
+    "tts_lang": "zh",
+    "voice_folder": "zh",
+    "has_voice": true
   }
 }

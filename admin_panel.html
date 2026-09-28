@@ -760,6 +760,55 @@
         .archive-card:hover {
             border-color: #555;
         }
+
+        /* Google Gemini AI Studio Stiler */
+        .gemini-setup-card {
+            background: linear-gradient(145deg, #131b2e 0%, #0f172a 100%);
+            border: 1px solid #3b82f6;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15);
+        }
+        .gemini-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: bold;
+        }
+        .gemini-step-box {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin: 12px 0;
+            font-size: 0.85rem;
+            line-height: 1.55;
+        }
+        .gemini-key-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 8px;
+        }
+        .btn-gemini-save {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 9px 16px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: filter 0.2s;
+        }
+        .btn-gemini-save:hover {
+            filter: brightness(1.15);
+        }
     </style>
 </head>
 <body>
@@ -808,49 +857,59 @@
             <label for="langPreset">Velg et språk fra listen (autofyller koder):</label>
             <select id="langPreset" onchange="onPresetChange()">
                 <option value="">-- Velg et språk eller fyll ut manuelt --</option>
-                <option value="no|Norsk|nob_Latn|no">🇳🇴 Norsk (Bokmål)</option>
-                <option value="en|Engelsk|eng_Latn|en">🇬🇧 Engelsk (English)</option>
-                <option value="sv|Svensk|swe_Latn|sv">🇸🇪 Svensk (Svenska)</option>
-                <option value="da|Dansk|dan_Latn|da">🇩🇰 Dansk (Dansk)</option>
-                <option value="uk|Ukrainsk|ukr_Cyrl|uk">🇺🇦 Ukrainsk (Українська)</option>
-                <option value="es|Spansk|spa_Latn|es">🇪🇸 Spansk (Español)</option>
-                <option value="de|Tysk|deu_Latn|de">🇩🇪 Tysk (Deutsch)</option>
-                <option value="fr|Fransk|fra_Latn|fr">🇫🇷 Fransk (Français)</option>
-                <option value="pl|Polsk|pol_Latn|pl">🇵🇱 Polsk (Polski)</option>
-                <option value="fa|Farsi|pes_Arab|fa">🇮🇷 Farsi / Persisk (فارسی)</option>
-                <option value="ar|Arabisk|arb_Arab|ar">🇸🇦 Arabisk (العربية)</option>
-                <option value="ru|Russisk|rus_Cyrl|ru">🇷🇺 Russisk (Русский)</option>
-                <option value="pt|Portugisisk|por_Latn|pt">🇵🇹 Portugisisk (Português)</option>
-                <option value="it|Italiensk|ita_Latn|it">🇮🇹 Italiensk (Italiano)</option>
-                <option value="nl|Nederlandsk|nld_Latn|nl">🇳🇱 Nederlandsk (Nederlands)</option>
-                <option value="fi|Finsk|fin_Latn|fi">🇫🇮 Finsk (Suomi)</option>
-                <option value="ro|Rumensk|ron_Latn|ro">🇷🇴 Rumensk (Română)</option>
-                <option value="tr|Tyrkisk|tur_Latn|tr">🇹🇷 Tyrkisk (Türkçe)</option>
-                <option value="ti|Tigrinja|tir_Ethi|en">🇪🇷 Tigrinja (ትግርኛ)</option>
-                <option value="am|Amharisk|amh_Ethi|en">🇪🇹 Amharisk (አማርኛ)</option>
-                <option value="so|Somalisk|som_Latn|en">🇸🇴 Somalisk (Soomaali)</option>
-                <option value="ckb|Kurdisk (Sorani)|ckb_Arab|en">☀️ Kurdisk Sorani (کوردی)</option>
-                <option value="kmr|Kurdisk (Kurmanji)|kmr_Latn|en">☀️ Kurdisk Kurmanji (Kurmancî)</option>
-                <option value="zh|Kinesisk|zho_Hans|zh">🇨🇳 Kinesisk (forenklet) (中文)</option>
-                <option value="tl|Tagalog|tgl_Latn|en">🇵🇭 Tagalog / Filippinsk</option>
-                <option value="vi|Vietnamesisk|vie_Latn|vi">🇻🇳 Vietnamesisk (Tiếng Việt)</option>
-                <option value="hi|Hindi|hin_Deva|hi">🇮🇳 Hindi (हिन्दी)</option>
-                <option value="sw|Swahili|swh_Latn|sw">🇰🇪 Swahili (Kiswahili)</option>
-                <option value="ur|Urdu|urd_Arab|ur">🇵🇰 Urdu (اردو)</option>
-                <option value="el|Gresk|ell_Grek|el">🇬🇷 Gresk (Ελληνικά)</option>
-                <option value="cs|Tsjekkisk|ces_Latn|cs">🇨🇿 Tsjekkisk (Čeština)</option>
-                <option value="hu|Ungarsk|hun_Latn|hu">🇭🇺 Ungarsk (Magyar)</option>
-                <option value="sk|Slovakisk|slk_Latn|sk">🇸🇰 Slovakisk (Slovenčina)</option>
-                <option value="sr|Serbisk|srp_Cyrl|sr">🇷🇸 Serbisk (Српски)</option>
-                <option value="hr|Kroatisk|hrv_Latn|hr">🇭🇷 Kroatisk (Hrvatski)</option>
-                <option value="bs|Bosnisk|bos_Latn|bs">🇧🇦 Bosnisk (Bosanski)</option>
-                <option value="sq|Albansk|als_Latn|sq">🇦🇱 Albansk (Shqip)</option>
-                <option value="lt|Litauisk|lit_Latn|lt">🇱🇹 Litauisk (Lietuvių)</option>
-                <option value="lv|Latvisk|lvs_Latn|lv">🇱🇻 Latvisk (Latviešu)</option>
-                <option value="et|Estisk|est_Latn|et">🇪🇪 Estisk (Eesti)</option>
-                <option value="bg|Bulgarsk|bul_Cyrl|bg">🇧🇬 Bulgarsk (Български)</option>
-                <option value="is|Islandsk|isl_Latn|is">🇮🇸 Islandsk (Íslenska)</option>
-                <option value="custom">✏️ Egendefinert språk (skriv inn FLORES-kode selv)</option>
+                
+                <optgroup label="📦 Ferdig installerte stemmer (Pakke med 17 lokale stemmer - 100% offline)">
+                    <option value="no|Norsk|nob_Latn|no">🇳🇴 Norsk (Bokmål)</option>
+                    <option value="en|Engelsk|eng_Latn|en">🇬🇧 Engelsk (English)</option>
+                    <option value="pl|Polsk|pol_Latn|pl">🇵🇱 Polsk (Polski)</option>
+                    <option value="uk|Ukrainsk|ukr_Cyrl|uk">🇺🇦 Ukrainsk (Українська)</option>
+                    <option value="ar|Arabisk|arb_Arab|ar">🇸🇦 Arabisk (العربية)</option>
+                    <option value="ru|Russisk|rus_Cyrl|ru">🇷🇺 Russisk (Русский)</option>
+                    <option value="es|Spansk|spa_Latn|es">🇪🇸 Spansk (Español)</option>
+                    <option value="de|Tysk|deu_Latn|de">🇩🇪 Tysk (Deutsch)</option>
+                    <option value="fr|Fransk|fra_Latn|fr">🇫🇷 Fransk (Français)</option>
+                    <option value="tr|Tyrkisk|tur_Latn|tr">🇹🇷 Tyrkisk (Türkçe)</option>
+                    <option value="it|Italiensk|ita_Latn|it">🇮🇹 Italiensk (Italiano)</option>
+                    <option value="nl|Nederlandsk|nld_Latn|nl">🇳🇱 Nederlandsk (Nederlands)</option>
+                    <option value="pt|Portugisisk|por_Latn|pt">🇵🇹 Portugisisk (Português)</option>
+                    <option value="sw|Swahili|swh_Latn|sw">🇰🇪 Swahili (Kiswahili)</option>
+                    <option value="zh|Kinesisk|zho_Hans|zh">🇨🇳 Kinesisk (forenklet) (中文)</option>
+                    <option value="sv|Svensk|swe_Latn|sv">🇸🇪 Svensk (Svenska)</option>
+                    <option value="da|Dansk|dan_Latn|da">🇩🇰 Dansk (Dansk)</option>
+                </optgroup>
+
+                <optgroup label="🌍 Flere innvandrerspråk (Søk på Hugging Face eller lag med Gemini KI)">
+                    <option value="fa|Farsi / Persisk|pes_Arab|fa">🇮🇷 Farsi / Persisk (فارسی)</option>
+                    <option value="ti|Tigrinja|tir_Ethi|ti">🇪🇷 Tigrinja (ትግርኛ)</option>
+                    <option value="so|Somali|som_Latn|so">🇸🇴 Somalisk (Soomaali)</option>
+                    <option value="ro|Rumensk|ron_Latn|ro">🇷🇴 Rumensk (Română)</option>
+                    <option value="lt|Litauisk|lit_Latn|lt">🇱🇹 Litauisk (Lietuvių)</option>
+                    <option value="tl|Tagalog / Filippinsk|tgl_Latn|tl">🇵🇭 Tagalog / Filippinsk</option>
+                    <option value="vi|Vietnamesisk|vie_Latn|vi">🇻🇳 Vietnamesisk (Tiếng Việt)</option>
+                    <option value="ckb|Kurdisk Sorani|ckb_Arab|ckb">☀️ Kurdisk Sorani (کوردی)</option>
+                    <option value="kmr|Kurdisk Kurmanji|kmr_Latn|kmr">☀️ Kurdisk Kurmanji (Kurmancî)</option>
+                    <option value="ur|Urdu|urd_Arab|ur">🇵🇰 Urdu (اردو)</option>
+                    <option value="hi|Hindi|hin_Deva|hi">🇮🇳 Hindi (हिन्दी)</option>
+                    <option value="el|Gresk|ell_Grek|el">🇬🇷 Gresk (Ελληνικά)</option>
+                    <option value="cs|Tsjekkisk|ces_Latn|cs">🇨🇿 Tsjekkisk (Čeština)</option>
+                    <option value="hu|Ungarsk|hun_Latn|hu">🇭🇺 Ungarsk (Magyar)</option>
+                    <option value="sk|Slovakisk|slk_Latn|sk">🇸🇰 Slovakisk (Slovenčina)</option>
+                    <option value="sr|Serbisk|srp_Cyrl|sr">🇷🇸 Serbisk (Српски)</option>
+                    <option value="hr|Kroatisk|hrv_Latn|hr">🇭🇷 Kroatisk (Hrvatski)</option>
+                    <option value="bs|Bosnisk|bos_Latn|bs">🇧🇦 Bosnisk (Bosanski)</option>
+                    <option value="bg|Bulgarsk|bul_Cyrl|bg">🇧🇬 Bulgarsk (Български)</option>
+                    <option value="am|Amharisk|amh_Ethi|am">🇪🇹 Amharisk (አማርኛ)</option>
+                    <option value="th|Thai|tha_Thai|th">🇹🇭 Thai (ไทย)</option>
+                    <option value="sq|Albansk|als_Latn|sq">🇦🇱 Albansk (Shqip)</option>
+                    <option value="fi|Finsk|fin_Latn|fi">🇫🇮 Finsk (Suomi)</option>
+                    <option value="lv|Latvisk|lvs_Latn|lv">🇱🇻 Latvisk (Latviešu)</option>
+                    <option value="et|Estisk|est_Latn|et">🇪🇪 Estisk (Eesti)</option>
+                    <option value="is|Islandsk|isl_Latn|is">🇮🇸 Islandsk (Íslenska)</option>
+                </optgroup>
+
+                <optgroup label="✏️ Andre valg">
+                    <option value="custom">✏️ Egendefinert språk (skriv inn FLORES-kode selv)</option>
+                </optgroup>
             </select>
 
             <div class="form-row">
@@ -876,12 +935,86 @@
 
             <label>Stemmeprøve for opplest lyd i øreplugger:</label>
             <div style="background-color: #252525; border: 1px solid #383838; border-radius: 8px; padding: 12px; margin-bottom: 15px;">
+                <!-- Alternativ 1: Behold / Bruk ferdig stemme fra pakken -->
                 <label id="optKeepVoice" style="display: none; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; margin-bottom: 8px;">
                     <input type="radio" name="voice_source" value="keep" onchange="onVoiceSourceChange()" style="width: auto; margin-bottom: 0;">
-                    <span>🛡️ <strong>Behold eksisterende lokal stemme (prompt.pt) (Anbefalt)</strong></span>
+                    <span id="labelKeep">🛡️ <strong>Bruk ferdig stemme fra pakken (prompt.pt) (Anbefalt)</strong></span>
                 </label>
 
-                <!-- Ta opp fra miksebord / mikrofon -->
+                <!-- Alternativ 2: Hugging Face katalog -->
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; margin-bottom: 8px;">
+                    <input type="radio" name="voice_source" value="hf" checked onchange="onVoiceSourceChange()" style="width: auto; margin-bottom: 0;">
+                    <span id="labelHf">🤗 <strong>Søk og hent fra Hugging Face (Katalog med bekreftede studio-opptak)</strong></span>
+                </label>
+                <div id="hfNotice" style="background-color: rgba(76, 175, 80, 0.15); border: 1px solid #4caf50; border-radius: 6px; padding: 10px 12px; font-size: 0.84rem; color: #a5d6a7; margin-bottom: 12px; line-height: 1.45;">
+                    ✨ <strong>Studio-opptak:</strong> Henter automatisk et ekte, støyfritt taleopptak av en morsmålstaler fra Hugging Face (Open Swara / XTTS-v2) og kloner stemmen til <code>prompt.pt</code>.
+                </div>
+
+                <!-- Alternativ 3: Gemini AI Studio-stemme -->
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; margin-bottom: 8px;">
+                    <input type="radio" name="voice_source" value="gemini" onchange="onVoiceSourceChange()" style="width: auto; margin-bottom: 0;">
+                    <span id="labelGemini">🪄 <strong>Generer AI-stemmeprøve via Google Gemini (Gratis, 100+ språk)</strong></span>
+                </label>
+
+                <!-- Gemini oppsett- og veiledningskort -->
+                <div id="geminiSetupBox" class="gemini-setup-card" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                        <h4 style="margin: 0; color: #93c5fd; font-size: 0.98rem; display: flex; align-items: center; gap: 6px;">
+                            🪄 Google Gemini AI Studio-stemme
+                        </h4>
+                        <span id="geminiKeyStatusBadge" class="gemini-badge" style="background: rgba(100, 116, 139, 0.2); color: #94a3b8; border: 1px solid #475569;">
+                            Laster status...
+                        </span>
+                    </div>
+                    <div style="font-size: 0.84rem; color: #cbd5e1; line-height: 1.45; margin-bottom: 10px;">
+                        Finner du ikke språket i den ferdige pakken eller på Hugging Face? Google Gemini kan generere en krystallklar studio-stemmeprøve på målspråket. Stemmen klones deretter til en lokal <code>prompt.pt</code> på tolkemaskinen, slik at språket etterpå fungerer <strong>100% offline</strong>!
+                    </div>
+
+                    <!-- Førstegangs-veiledning -->
+                    <div class="gemini-step-box">
+                        <strong style="color: #60a5fa;">📖 Slik oppretter du en gratis API-nøkkel (Første gang):</strong>
+                        <ol style="margin: 8px 0 8px 18px; padding: 0; color: #e2e8f0;">
+                            <li>Gå til <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #93c5fd; text-decoration: underline; font-weight: bold;">Google AI Studio (aistudio.google.com) ↗️</a> og logg inn med din Google-konto (Gmail).</li>
+                            <li>Trykk på den blå knappen <strong>«Create API key»</strong> (eller <em>«Get API key»</em> i menyen til venstre).</li>
+                            <li>Velg et Google Cloud-prosjekt eller bekreft med <strong>«Create API key in new project»</strong>.</li>
+                            <li>Kopier API-nøkkelen som genereres (begynner med <code>AIzaSy...</code>).</li>
+                            <li>Lim inn nøkkelen under og trykk <strong>«Lagre API-nøkkel»</strong>.</li>
+                        </ol>
+                        <div style="color: #94a3b8; font-size: 0.78rem;">
+                            💡 <em>API-nøkkelen er gratis til personlig/ideell bruk. Den lagres trygt på tolkemaskinen i <code>system_innstillinger.json</code> og brukes kun én gang per språk for å hente referansestemmen.</em>
+                        </div>
+                    </div>
+
+                    <!-- Nøkkel-input og lagring -->
+                    <label style="font-size: 0.85rem; color: #e2e8f0; font-weight: bold; margin-bottom: 4px; display: block;">
+                        Google Gemini API-nøkkel:
+                    </label>
+                    <div class="gemini-key-row">
+                        <div style="position: relative; flex: 1;">
+                            <input type="password" id="geminiApiKeyInput" placeholder="Lim inn AIzaSy... her" style="width: 100%; box-sizing: border-box; margin-bottom: 0; font-family: monospace; padding-right: 36px;">
+                            <button type="button" onclick="toggleGeminiKeyVisibility()" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1rem; color: #94a3b8; padding: 2px 6px;" title="Vis/skjul nøkkel">👁️</button>
+                        </div>
+                        <button type="button" class="btn-gemini-save" onclick="saveGeminiApiKey()">
+                            💾 Lagre API-nøkkel
+                        </button>
+                    </div>
+                    <div id="geminiSaveMsg" style="font-size: 0.82rem; margin-top: 6px; display: none;"></div>
+
+                    <!-- Stemmetype (Kjønn) -->
+                    <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                        <span style="font-size: 0.85rem; font-weight: bold; color: #e2e8f0;">Ønsket stemmetype:</span>
+                        <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.85rem; color: #fff;">
+                            <input type="radio" name="gemini_gender" value="male" checked style="width: auto; margin-bottom: 0;">
+                            👨 <strong>Mann</strong> (Puck - rolig, naturlig)
+                        </label>
+                        <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.85rem; color: #fff;">
+                            <input type="radio" name="gemini_gender" value="female" style="width: auto; margin-bottom: 0;">
+                            👩 <strong>Kvinne</strong> (Kore - varm, klar)
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Alternativ 4: Ta opp fra miksebord / mikrofon -->
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; margin-bottom: 8px;">
                     <input type="radio" name="voice_source" value="mixer" onchange="onVoiceSourceChange()" style="width: auto; margin-bottom: 0;">
                     <span id="labelMixer">🎤 <strong>Ta opp direkte fra miksebord / mikrofon (Bruk kirkesalen)</strong></span>
@@ -901,7 +1034,6 @@
 
                     <!-- Start opptak med countdown -->
                     <div id="mixerIdleControls">
-                        <!-- Live VU-lydmeter for å sjekke innkommende miksebord-signal FØR opptak -->
                         <div class="mixer-vu-box">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                                 <span style="font-size: 0.88rem; font-weight: bold; color: #e2e8f0; display: flex; align-items: center; gap: 6px;">
@@ -968,14 +1100,7 @@
                     </div>
                 </div>
 
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; margin-bottom: 8px;">
-                    <input type="radio" name="voice_source" value="hf" checked onchange="onVoiceSourceChange()" style="width: auto; margin-bottom: 0;">
-                    <span id="labelHf">🤗 <strong>Ekte menneskestemme fra Hugging Face (Katalog med 44 språk)</strong></span>
-                </label>
-                <div id="hfNotice" style="background-color: rgba(76, 175, 80, 0.15); border: 1px solid #4caf50; border-radius: 6px; padding: 8px 12px; font-size: 0.82rem; color: #a5d6a7; margin-bottom: 12px;">
-                    ✨ <strong>Studio-opptak:</strong> Henter automatisk et ekte, støyfritt taleopptak av en morsmålstaler fra Hugging Face (Open Swara / XTTS-v2) og kloner stemmen til <code>prompt.pt</code>.
-                </div>
-
+                <!-- Alternativ 5: Last opp fil -->
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; margin-bottom: 8px;">
                     <input type="radio" name="voice_source" value="custom" onchange="onVoiceSourceChange()" style="width: auto; margin-bottom: 0;">
                     <span id="labelCustom">📁 Last opp ferdig innspilt lydfil (WAV/MP3)</span>
@@ -986,6 +1111,7 @@
                     <input type="file" id="langVoiceFile" accept="audio/wav, audio/mpeg" style="margin-bottom: 5px;">
                 </div>
 
+                <!-- Alternativ 6: Kun teksting -->
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; margin-bottom: 0;">
                     <input type="radio" name="voice_source" value="none" onchange="onVoiceSourceChange()" style="width: auto; margin-bottom: 0;">
                     <span>📝 Kun teksting på storskjerm (ingen opplest lyd)</span>
@@ -1341,6 +1467,8 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
         let currentLanguages = {};
         let availableVoicesList = [];
         let hfSupported = [];
+        let hasGeminiKey = false;
+        const PRE_INSTALLED_PACKAGES = ['no', 'en', 'pl', 'uk', 'ar', 'ru', 'es', 'de', 'fr', 'tr', 'it', 'nl', 'pt', 'sw', 'zh', 'sv', 'da'];
 
         async function fetchHwStatus() {
             try {
@@ -1397,6 +1525,12 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
 
                 if (config.available_voices) {
                     availableVoicesList = config.available_voices;
+                }
+
+                // Håndter Gemini API-nøkkel status
+                if (config.has_gemini_key !== undefined) {
+                    hasGeminiKey = Boolean(config.has_gemini_key);
+                    updateGeminiKeyBadge(hasGeminiKey);
                 }
 
                 // Håndter språkliste
@@ -1595,30 +1729,38 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
             const optKeep = document.getElementById('optKeepVoice');
             const labelMixer = document.getElementById('labelMixer');
             const labelHf = document.getElementById('labelHf');
+            const labelGemini = document.getElementById('labelGemini');
             const labelCustom = document.getElementById('labelCustom');
             
-            const hasVoice = (currentLanguages[code] && (currentLanguages[code].has_voice || currentLanguages[code].voice_folder)) || availableVoicesList.includes(code);
+            const hasVoice = PRE_INSTALLED_PACKAGES.includes(code) || (currentLanguages[code] && (currentLanguages[code].has_voice || currentLanguages[code].voice_folder)) || availableVoicesList.includes(code);
             
             if (hasVoice) {
                 alertBox.style.display = 'block';
                 optKeep.style.display = 'flex';
                 if (labelMixer) labelMixer.innerHTML = "⚠️ <strong>Overskriv med nytt opptak fra miksebord</strong>";
-                labelHf.innerHTML = "⚠️ <strong>Overskriv med ekte stemme fra Hugging Face</strong>";
-                labelCustom.innerHTML = "⚠️ <strong>Overskriv med ny opplastet lydfil</strong>";
+                if (labelHf) labelHf.innerHTML = "⚠️ <strong>Overskriv med ekte stemme fra Hugging Face</strong>";
+                if (labelGemini) labelGemini.innerHTML = "⚠️ <strong>Overskriv med ny AI-stemme fra Gemini</strong>";
+                if (labelCustom) labelCustom.innerHTML = "⚠️ <strong>Overskriv med ny opplastet lydfil</strong>";
                 
-                // Sett behold som standard for å unngå overskriving ved et uhell!
+                // Sett behold/bruk ferdig stemme fra pakken som standard for å unngå overskriving ved et uhell!
                 const keepRadio = document.querySelector('input[name="voice_source"][value="keep"]');
                 if (keepRadio) keepRadio.checked = true;
             } else {
                 alertBox.style.display = 'none';
                 optKeep.style.display = 'none';
                 if (labelMixer) labelMixer.innerHTML = "🎤 <strong>Ta opp direkte fra miksebord / mikrofon (Bruk kirkesalen)</strong>";
-                labelHf.innerHTML = "🤗 <strong>Ekte menneskestemme fra Hugging Face (Katalog med 44 språk)</strong>";
-                labelCustom.innerHTML = "📁 <strong>Last opp ferdig innspilt lydfil (WAV/MP3)</strong>";
+                if (labelHf) labelHf.innerHTML = "🤗 <strong>Søk og hent fra Hugging Face (Katalog med bekreftede studio-opptak)</strong>";
+                if (labelGemini) labelGemini.innerHTML = "🪄 <strong>Generer AI-stemmeprøve via Google Gemini (Gratis, 100+ språk)</strong>";
+                if (labelCustom) labelCustom.innerHTML = "📁 <strong>Last opp ferdig innspilt lydfil (WAV/MP3)</strong>";
                 
-                // Sett Hugging Face som standardvalg
-                const hfRadio = document.querySelector('input[name="voice_source"][value="hf"]');
-                if (hfRadio) hfRadio.checked = true;
+                // Hvis språket finnes i Hugging Face katalog: velg HF som standard. Hvis ikke: velg Gemini som standard!
+                if (hfSupported.length > 0 && hfSupported.includes(code)) {
+                    const hfRadio = document.querySelector('input[name="voice_source"][value="hf"]');
+                    if (hfRadio) hfRadio.checked = true;
+                } else {
+                    const geminiRadio = document.querySelector('input[name="voice_source"][value="gemini"]');
+                    if (geminiRadio) geminiRadio.checked = true;
+                }
             }
             onVoiceSourceChange();
         }
@@ -1627,29 +1769,96 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
             const selected = document.querySelector('input[name="voice_source"]:checked')?.value || 'keep';
             const uploadBox = document.getElementById('uploadInputBox');
             const hfNotice = document.getElementById('hfNotice');
+            const geminiBox = document.getElementById('geminiSetupBox');
             const mixerBox = document.getElementById('mixerRecordingBox');
             
             if (selected === 'hf') {
                 stopLiveVuMeter();
-                hfNotice.style.display = 'block';
-                uploadBox.style.display = 'none';
+                if (hfNotice) hfNotice.style.display = 'block';
+                if (geminiBox) geminiBox.style.display = 'none';
+                if (uploadBox) uploadBox.style.display = 'none';
+                if (mixerBox) mixerBox.style.display = 'none';
+            } else if (selected === 'gemini') {
+                stopLiveVuMeter();
+                if (hfNotice) hfNotice.style.display = 'none';
+                if (geminiBox) geminiBox.style.display = 'block';
+                if (uploadBox) uploadBox.style.display = 'none';
                 if (mixerBox) mixerBox.style.display = 'none';
             } else if (selected === 'custom') {
                 stopLiveVuMeter();
-                hfNotice.style.display = 'none';
-                uploadBox.style.display = 'block';
+                if (hfNotice) hfNotice.style.display = 'none';
+                if (geminiBox) geminiBox.style.display = 'none';
+                if (uploadBox) uploadBox.style.display = 'block';
                 if (mixerBox) mixerBox.style.display = 'none';
             } else if (selected === 'mixer') {
-                hfNotice.style.display = 'none';
-                uploadBox.style.display = 'none';
+                if (hfNotice) hfNotice.style.display = 'none';
+                if (geminiBox) geminiBox.style.display = 'none';
+                if (uploadBox) uploadBox.style.display = 'none';
                 if (mixerBox) mixerBox.style.display = 'block';
                 startLiveVuMeter();
             } else {
                 stopLiveVuMeter();
-                hfNotice.style.display = 'none';
-                uploadBox.style.display = 'none';
+                if (hfNotice) hfNotice.style.display = 'none';
+                if (geminiBox) geminiBox.style.display = 'none';
+                if (uploadBox) uploadBox.style.display = 'none';
                 if (mixerBox) mixerBox.style.display = 'none';
             }
+        }
+
+        async function saveGeminiApiKey() {
+            const input = document.getElementById('geminiApiKeyInput');
+            const key = (input.value || '').trim();
+            const msg = document.getElementById('geminiSaveMsg');
+            if (!key) {
+                alert("Vennligst lim inn en gyldig Gemini API-nøkkel før du lagrer.");
+                return;
+            }
+            msg.style.display = 'block';
+            msg.style.color = '#93c5fd';
+            msg.textContent = 'Lagrer API-nøkkel til tolkemaskinen...';
+            try {
+                const res = await fetch(`${apiBase()}/api/admin/set_gemini_key`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gemini_api_key: key })
+                });
+                const data = await res.json();
+                if (res.ok && data.status === 'success') {
+                    msg.style.color = '#4caf50';
+                    msg.textContent = '✅ Gemini API-nøkkel lagret og aktivert!';
+                    hasGeminiKey = true;
+                    updateGeminiKeyBadge(true);
+                    setTimeout(() => { msg.style.display = 'none'; }, 4000);
+                } else {
+                    msg.style.color = '#f87171';
+                    msg.textContent = '❌ Feil ved lagring: ' + (data.error || 'Ukjent feil');
+                }
+            } catch (e) {
+                msg.style.color = '#f87171';
+                msg.textContent = '❌ Nettverksfeil: ' + e.message;
+            }
+        }
+
+        function updateGeminiKeyBadge(active) {
+            const badge = document.getElementById('geminiKeyStatusBadge');
+            if (!badge) return;
+            if (active) {
+                badge.innerHTML = '🟢 API-nøkkel er aktivert på tolkemaskinen';
+                badge.style.background = 'rgba(34, 197, 94, 0.15)';
+                badge.style.color = '#4ade80';
+                badge.style.borderColor = '#22c55e';
+            } else {
+                badge.innerHTML = '⚪ Ingen API-nøkkel lagret (se veiledning under)';
+                badge.style.background = 'rgba(234, 179, 8, 0.15)';
+                badge.style.color = '#facc15';
+                badge.style.borderColor = '#eab308';
+            }
+        }
+
+        function toggleGeminiKeyVisibility() {
+            const input = document.getElementById('geminiApiKeyInput');
+            if (!input) return;
+            input.type = (input.type === 'password') ? 'text' : 'password';
         }
 
         function startCountdownAndRecord() {
@@ -1797,14 +2006,17 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
 
             checkExistingVoice(code);
 
-            // Oppdater infoboks hvis språket har ferdig Hugging Face stemme
+            // Oppdater infoboks basert på hvilket nivå språket tilhører
             const hfNotice = document.getElementById('hfNotice');
-            if (hfSupported.length === 0 || hfSupported.includes(code)) {
-                hfNotice.innerHTML = `✨ <strong>Ekte studio-stemme:</strong> Fant ekte menneskestemme for <strong>${name}</strong> på Hugging Face (Open Swara / XTTS-v2). KI-en kloner den automatisk ved lagring.`;
+            if (PRE_INSTALLED_PACKAGES.includes(code)) {
+                hfNotice.innerHTML = `📦 <strong>Ferdig stemmepakke:</strong> Fant ferdig installert, kvalitetssikret stemmeprofil for <strong>${name}</strong> i systemet (100% offline). Ingen nedlasting eller opptak nødvendig!`;
+                hfNotice.style.borderColor = "#4caf50";
+            } else if (hfSupported.length === 0 || hfSupported.includes(code)) {
+                hfNotice.innerHTML = `✨ <strong>Ekte studio-stemme:</strong> Fant ekte menneskestemme for <strong>${name}</strong> på Hugging Face (Open Swara / XTTS-v2). KI-en laster ned og kloner den automatisk ved lagring.`;
                 hfNotice.style.borderColor = "#4caf50";
             } else {
-                hfNotice.innerHTML = `ℹ️ <strong>Tips:</strong> Systemet fant ingen automatisk stemmeprøve for dette språket. Les inn fra miksebordet (10–15 sek), last opp en egen kort lydprøve, eller velg kun teksting på skjerm.`;
-                hfNotice.style.borderColor = "#ff9800";
+                hfNotice.innerHTML = `ℹ️ <strong>Tips:</strong> Systemet fant ingen ferdig innspilt stemme for <strong>${name}</strong> på Hugging Face. Vi anbefaler å generere en AI-stemme via <strong>Google Gemini</strong> under, eller ta opp fra miksebordet.`;
+                hfNotice.style.borderColor = "#3b82f6";
             }
         }
 
@@ -1823,10 +2035,10 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
                 return;
             }
 
-            const hasExisting = (currentLanguages[code] && (currentLanguages[code].has_voice || currentLanguages[code].voice_folder)) || availableVoicesList.includes(code);
+            const hasExisting = (currentLanguages[code] && (currentLanguages[code].has_voice || currentLanguages[code].voice_folder)) || availableVoicesList.includes(code) || PRE_INSTALLED_PACKAGES.includes(code);
             let overwrite = false;
 
-            if (hasExisting && (voiceSource === 'hf' || voiceSource === 'custom' || voiceSource === 'mixer')) {
+            if (hasExisting && (voiceSource === 'hf' || voiceSource === 'custom' || voiceSource === 'mixer' || voiceSource === 'gemini')) {
                 const conf = confirm(`Språket "${name || code}" har allerede en lokal stemmeprofil (prompt.pt).\n\nEr du helt sikker på at du vil OVERSKRIVE den eksisterende stemmen?`);
                 if (!conf) {
                     return;
@@ -1840,8 +2052,16 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
             }
 
             if (voiceSource === 'custom' && !file) {
-                alert("Vennligst velg en lydfil (mp3/wav) for opplasting, eller velg opptak fra miksebord / Hugging Face.");
+                alert("Vennligst velg en lydfil (mp3/wav) for opplasting, eller velg en annen stemmekilde.");
                 return;
+            }
+
+            if (voiceSource === 'gemini') {
+                const enteredKey = document.getElementById('geminiApiKeyInput')?.value?.trim();
+                if (!enteredKey && !hasGeminiKey) {
+                    alert("Vennligst oppgi og lagre en Gemini API-nøkkel i veiledningen under før du aktiverer språket, eller velg en annen stemmekilde.");
+                    return;
+                }
             }
 
             btn.disabled = true;
@@ -1851,6 +2071,8 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
                 status.innerHTML = '<span class="spinner"></span>Kloner stemme fra miksebord-opptaket med OmniVoice... (ca 15-20 sek på GPU)';
             } else if (voiceSource === 'hf') {
                 status.innerHTML = '<span class="spinner"></span>Laster ned ekte menneskestemme fra Hugging Face og kloner... (ca 15-20 sek på GPU)';
+            } else if (voiceSource === 'gemini') {
+                status.innerHTML = '<span class="spinner"></span>Genererer studio-stemme med Google Gemini AI og kloner med OmniVoice... (ca 15-20 sek på GPU)';
             } else if (voiceSource === 'custom') {
                 status.innerHTML = '<span class="spinner"></span>Laster opp fil og kloner stemme... (ca 15-20 sek på GPU)';
             } else if (voiceSource === 'keep') {
@@ -1870,6 +2092,14 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
             formData.append("overwrite_voice", overwrite ? "true" : "false");
             if (voiceSource === 'custom' && file) {
                 formData.append("audio_file", file);
+            }
+            if (voiceSource === 'gemini') {
+                const enteredKey = document.getElementById('geminiApiKeyInput')?.value?.trim();
+                if (enteredKey) {
+                    formData.append("gemini_api_key", enteredKey);
+                }
+                const gender = document.querySelector('input[name="gemini_gender"]:checked')?.value || 'male';
+                formData.append("gemini_gender", gender);
             }
 
             try {
@@ -1892,6 +2122,7 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
                     document.getElementById('langPreset').value = "";
                     resetMixerRecording();
                     checkExistingVoice("");
+                    if (hasGeminiKey) updateGeminiKeyBadge(true);
                     
                     // Oppdater listen og oppdater iframen
                     await fetchHwStatus();
