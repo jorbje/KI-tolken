@@ -78,10 +78,16 @@ Når `core_pipeline.py` kjører, oppretter den en lokal webserver. Koble mobilte
 - **Teknisk Ansvarlig (Admin Panel):** `http://<IP-til-tolkemaskinen>:8080/admin`
 
 ### Administrasjon og nye språk
-1. Gå til **Admin Panelet** fra en PC.
-2. Der kan du spesifisere **hvor mange språk** som skal tolkes samtidig (basert på lydkortets utganger).
-3. I dette panelet kan du også **laste opp en lydprøve** (.wav/.mp3) av en person for å klone stemmen. Systemet lager automatisk en ny `.pt` stemmeprofil!
-4. Valgene du gjør i Admin-panelet overstyrer umiddelbart hva tolke-ansvarlig ser på mobilen sin i det vanlige Kontrollpanelet.
+1. Gå til **Admin Panelet** fra en PC (`http://<IP-til-tolkemaskinen>:8080/admin`).
+2. Der kan du spesifisere **hvor mange språk** som skal tolkes samtidig (basert på lydkortets fysiske utganger).
+3. **Ferdig installert stemmepakke (17 språk, 100 % offline):** Systemet leveres ferdig installert med kvalitetssikrede, klonede stemmer for de vanligste innvandrerspråkene: Norsk, Engelsk, Svensk, Dansk, Ukrainsk, Russisk, Spansk, Polsk, Tysk, Fransk, Arabisk, Italiensk, Nederlandsk, Portugisisk, Tyrkisk, Swahili og Kinesisk.
+4. **Legge til nye språk (3-delt arbeidsflyt):**
+   - **Nivå 1 (Ferdig pakke):** Språk i den lokale pakken aktiveres umiddelbart med ett klikk uten opptak eller nedlasting.
+   - **Nivå 2 (Hugging Face):** For nye språk søker systemet automatisk opp bekreftede studio-opptak fra Hugging Face (Open Swara / XTTS-v2).
+   - **Nivå 3 (Google Gemini AI Studio):** For språk uten opptak kan man generere en studiostemme automatisk via Google Gemini API (støtter Gemini 3.8 / 2.5 / 2.0 Flash TTS). OmniVoice kloner deretter stemmen til en lokal `prompt.pt`, slik at språket etterpå fungerer 100 % offline under gudstjenesten.
+   - **Miksebord / Egen fil:** Man kan også ta opp en stemme direkte fra miksebordet (med innebygd VU-meter og nedtelling) eller laste opp en egen `.wav`/`.mp3`.
+5. **Prøvelytt:** Alle språk med klonet stemme har en «▶️ Prøvelytt»-knapp i adminpanelet for rask test av stemmekvalitet og uttale direkte i nettleseren.
+6. Valgene du gjør i Admin-panelet overstyrer umiddelbart hva tolke-ansvarlig ser på mobilen sin i det vanlige Kontrollpanelet.
 
 ## Kjente Begrensninger og Løsninger
 - **"Gummistrikk-effekt" på lyden:** Hvis tolken velger mange språk (3+) og skjermkortet er for svakt, vil TTS-køen vokse. Systemet er programmert med en "dynamisk gasspedal" som skrur opp lesehastigheten inntil 1.5x, men ved for svak hardware vil det henge bak. Gå inn i Admin-panelet og reduser antall kanaler til GPUen byttes.
