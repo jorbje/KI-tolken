@@ -2206,6 +2206,94 @@ class AudioPipeline:
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500, headers=self._API_HEADERS)
 
+    SAMPLE_SENTENCES = {
+        "no": "Dette er en stemmeprøve for å lytte til lydkvaliteten i KI-Tolken.",
+        "en": "This is a voice sample to check the audio quality in the AI interpreter.",
+        "sv": "Detta är ett röstprov för att kontrollera ljudkvaliteten i KI-Tolken.",
+        "da": "Dette er en stemmeprøve for at tjekke lydkvaliteten i KI-Tolken.",
+        "uk": "Це зразок голосу для перевірки якості звуку в системі перекладу.",
+        "ru": "Это образец голоса для проверки качества звука живого перевода.",
+        "pl": "To jest próbka głosu do sprawdzenia jakości dźwięku tłumacza.",
+        "ar": "هذه عينة صوتية لاختبار جودة الصوت في نظام الترجمة الفورية.",
+        "es": "Esta es una muestra de voz para comprobar la calidad de sonido del intérprete.",
+        "de": "Dies ist eine Sprachprobe, um die Audioqualität des KI-Dolmetschers zu prüfen.",
+        "fr": "Ceci est un échantillon vocal pour vérifier la qualité sonore du traducteur.",
+        "it": "Questo è un campione vocale per verificare la qualità dell'audio dell'interprete.",
+        "nl": "Dit is een stemvoorbeeld om de audiokwaliteit van de tolk te controleren.",
+        "pt": "Esta é uma amostra de voz para verificar a qualidade de áudio do intérprete.",
+        "tr": "Bu, yapay zeka çevirmeninin ses kalitesini kontrol etmek için bir örnektir.",
+        "sw": "Huu ni sampuli ya sauti ya kuangalia ubora wa sauti ya mkalimani.",
+        "zh": "这是用于检查人工智能同声传译声音质量的测试样本。"
+    }
+
+    async def api_voice_sample_handler(self, request):
+        """REST API: Returnerer eller genererer en kort WAV-stemmeprøve for et gitt språk."""
+        lang_code = request.match_info.get('lang_code', '').lower()
+        if not lang_code:
+            return web.json_response({"error": "Mangler språkkode"}, status=400, headers=self._API_HEADERS)
+            
+        DEFAULT_VOICE_FOLDERS = {
+            "no": "Norsk_stemme_kvinne",
+            "en": "engelsk",
+            "sv": "svensk",
+            "da": "dansk",
+            "uk": "ukrainsk",
+            "es": "spansk"
+        }
+        folder_name = self.languages.get(lang_code, {}).get("voice_folder") or DEFAULT_VOICE_FOLDERS.get(lang_code, lang_code)
+        sample_path = os.path.join(folder_name, "sample.wav")
+        prompt_path = os.path.join(folder_name, "prompt.pt")
+
+        # 1. Hvis sample.wav allerede er generert og cachet:
+        if os.path.exists(sample_path) and os.path.getsize(sample_path) > 1000:
+            return web.FileResponse(sample_path, headers={
+                "Content-Type": "audio/wav",
+                "Cache-Control": "public, max-age=3600"
+            })
+
+        # 2. Hvis vi har en prompt.pt (eller stemme i minnet), generer en kort prøve:
+        if folder_name not in self.voice_prompts and not os.path.exists(prompt_path):
+            return web.json_response({"error": f"Ingen stemmeprofil funnet for {lang_code}"}, status=404, headers=self._API_HEADERS)
+
+        tts_lang = self.languages.get(lang_code, {}).get("tts_lang", lang_code)
+        sample_text = self.SAMPLE_SENTENCES.get(lang_code, "This is a voice sample for the live interpretation system.")
+
+        try:
+            print(f"[Admin] Genererer stemmeprøve for {lang_code} ({folder_name}): '{sample_text}'...")
+            async with self.whisper_lock:
+                prompt_obj = self.voice_prompts.get(folder_name)
+                if prompt_obj is None and os.path.exists(prompt_path):
+                    prompt_obj = torch.load(prompt_path, weights_only=False)
+                    self.voice_prompts[folder_name] = prompt_obj
+                
+                def _generate():
+                    result = self.omnivoice.generate(sample_text, prompt=prompt_obj, language=tts_lang)
+                    if isinstance(result, list):
+                        result = result[0]
+                    if hasattr(result, "cpu"):
+                        result = result.cpu().numpy()
+                    if result.ndim == 2:
+                        result = result.squeeze(0)
+                    return result
+                
+                audio_np = await asyncio.to_thread(_generate)
+                os.makedirs(folder_name, exist_ok=True)
+                
+                tensor = torch.from_numpy(audio_np).float()
+                if tensor.ndim == 1:
+                    tensor = tensor.unsqueeze(0)
+                tensor = torch.clamp(tensor, -1.0, 1.0)
+                torchaudio.save(sample_path, tensor, 24000)
+                print(f"[Admin] Stemmeprøve lagret: {sample_path}")
+
+            return web.FileResponse(sample_path, headers={
+                "Content-Type": "audio/wav",
+                "Cache-Control": "public, max-age=3600"
+            })
+        except Exception as e:
+            print(f"[Admin] Feil ved generering av stemmeprøve for {lang_code}: {e}")
+            return web.json_response({"error": f"Kunne ikke generere stemmeprøve: {e}"}, status=500, headers=self._API_HEADERS)
+
     async def run_api_server(self):
         """Tråd 6: Kjører REST API på port 8080 for ekstern kontroll."""
         app = web.Application()
@@ -2223,6 +2311,7 @@ class AudioPipeline:
         app.router.add_post('/api/admin/start_mixer_recording', self.api_start_mixer_recording_handler)
         app.router.add_post('/api/admin/stop_mixer_recording', self.api_stop_mixer_recording_handler)
         app.router.add_get('/api/admin/recorded_sample_audio', self.api_recorded_sample_audio_handler)
+        app.router.add_get('/api/admin/voice_sample/{lang_code}', self.api_voice_sample_handler)
         app.router.add_get('/api/admin/mic_level', self.api_mic_level_handler)
         app.router.add_get('/api/admin/dictionary', self.api_get_dictionary_handler)
         app.router.add_post('/api/admin/dictionary', self.api_update_dictionary_handler)

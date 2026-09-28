@@ -761,6 +761,39 @@
             border-color: #555;
         }
 
+        /* Prøvelytt-knapp for stemmer i venstre kolonne */
+        .btn-voice-preview {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+            color: #ffffff;
+            border: 1px solid #3b82f6;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.15s ease-in-out;
+            white-space: nowrap;
+        }
+        .btn-voice-preview:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+            border-color: #60a5fa;
+            transform: scale(1.02);
+        }
+        .btn-voice-preview.playing {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            border-color: #34d399;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+            animation: pulsePlay 1.2s infinite alternate;
+        }
+        .btn-voice-preview.loading {
+            background: #475569;
+            border-color: #64748b;
+            cursor: wait;
+        }
+
         /* Google Gemini AI Studio Stiler */
         .gemini-setup-card {
             background: linear-gradient(145deg, #131b2e 0%, #0f172a 100%);
@@ -1607,6 +1640,10 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
                     ? `<span class="badge badge-voice">🔊 Klonet stemme</span>`
                     : `<span class="badge badge-textonly">📝 Kun teksting</span>`;
                 
+                const playBtn = hasVoice
+                    ? `<button type="button" class="btn-voice-preview" id="play_btn_${code}" onclick="playVoiceSample('${code}', this)" title="Lytt til stemmen for ${info.name}">▶️ Prøvelytt</button>`
+                    : '';
+                
                 const deleteBtn = `<button class="btn-delete" onclick="deleteLanguage('${code}', '${info.name}')" title="Fjern språket permanent fra tolken">Slett</button>`;
 
                 card.innerHTML = `
@@ -1621,13 +1658,78 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
                             <div class="lang-sub">NLLB: <code>${info.nllb}</code></div>
                         </div>
                     </div>
-                    <div class="lang-badges">
+                    <div class="lang-badges" style="display: flex; align-items: center; gap: 8px;">
+                        ${playBtn}
                         ${voiceBadge}
                         ${deleteBtn}
                     </div>
                 `;
                 container.appendChild(card);
             }
+        }
+
+        let activeSampleAudio = null;
+        let activeSampleBtn = null;
+
+        function playVoiceSample(code, btn) {
+            if (activeSampleAudio && activeSampleBtn === btn) {
+                activeSampleAudio.pause();
+                activeSampleAudio = null;
+                btn.classList.remove('playing', 'loading');
+                btn.innerHTML = '▶️ Prøvelytt';
+                activeSampleBtn = null;
+                return;
+            }
+
+            if (activeSampleAudio) {
+                activeSampleAudio.pause();
+                if (activeSampleBtn) {
+                    activeSampleBtn.classList.remove('playing', 'loading');
+                    activeSampleBtn.innerHTML = '▶️ Prøvelytt';
+                }
+            }
+
+            btn.classList.add('loading');
+            btn.innerHTML = '<span class="spinner" style="width:12px;height:12px;margin:0 4px 0 0;display:inline-block;vertical-align:middle;"></span>Laster...';
+            activeSampleBtn = btn;
+
+            const audio = new Audio(`${apiBase()}/api/admin/voice_sample/${code}?_=${Date.now()}`);
+            activeSampleAudio = audio;
+
+            audio.oncanplay = () => {
+                btn.classList.remove('loading');
+                btn.classList.add('playing');
+                btn.innerHTML = '⏹️ Stopp';
+            };
+
+            audio.onplay = () => {
+                btn.classList.remove('loading');
+                btn.classList.add('playing');
+                btn.innerHTML = '⏹️ Stopp';
+            };
+
+            audio.onended = () => {
+                btn.classList.remove('playing', 'loading');
+                btn.innerHTML = '▶️ Prøvelytt';
+                activeSampleAudio = null;
+                activeSampleBtn = null;
+            };
+
+            audio.onerror = (e) => {
+                btn.classList.remove('playing', 'loading');
+                btn.innerHTML = '▶️ Prøvelytt';
+                activeSampleAudio = null;
+                activeSampleBtn = null;
+                alert("Kunne ikke spille av stemmeprøve for " + code + ". Sjekk at serveren kjører.");
+            };
+
+            audio.play().catch(err => {
+                btn.classList.remove('playing', 'loading');
+                btn.innerHTML = '▶️ Prøvelytt';
+                activeSampleAudio = null;
+                activeSampleBtn = null;
+                console.error("Audio playback error:", err);
+            });
         }
 
         async function toggleLanguageEnabled(code, enabled) {
