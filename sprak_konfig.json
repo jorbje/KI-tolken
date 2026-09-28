@@ -50,7 +50,7 @@
   "ru": {
     "name": "Russisk",
     "nllb": "rus_Cyrl",
-    "tts_lang": "en",
+    "tts_lang": "ru",
     "voice_folder": "ru",
     "has_voice": true,
     "enabled": true

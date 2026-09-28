@@ -14,7 +14,10 @@ import time
 import soundfile as sf
 from omnivoice import OmniVoice
 from aiohttp import web
+import urllib.request
 import torch
+import torchaudio
+import torchaudio.functional as F_audio
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from dataclasses import dataclass
 from faster_whisper import WhisperModel
@@ -39,34 +42,20 @@ HF_VOICE_SAMPLES = {
     "ja": "https://huggingface.co/coqui/XTTS-v2/resolve/main/samples/ja-sample.wav",
     "en": "https://huggingface.co/coqui/XTTS-v2/resolve/main/samples/en_sample.wav",
 
-    # Open Swara (ekte menneskelige stemmer på Hugging Face - CC-BY-SA 4.0)
-    "pl": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/polish/male/polish_male_english_open_swara_001.wav",
-    "fa": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/persian/male/persian_male_english_open_swara_001.wav",
-    "ar": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/arabic/male/arabic_male_english_open_swara_001.wav",
-    "ru": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/russian/male/russian_male_english_open_swara_001.wav",
-    "it": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/italian/male/italian_male_english_open_swara_001.wav",
-    "nl": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/dutch/male/dutch_male_english_open_swara_001.wav",
-    "fi": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/finnish/male/finnish_male_english_open_swara_001.wav",
-    "ro": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/romanian/male/romanian_male_english_open_swara_001.wav",
-    "sw": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/swahili/male/swahili_male_english_open_swara_001.wav",
-    "uk": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/ukrainian/male/ukrainian_male_english_open_swara_001.wav",
-    "vi": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/vietnamese/male/vietnamese_male_english_open_swara_001.wav",
-    "hi": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/hindi/male/hindi_male_english_open_swara_001.wav",
-    "cs": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/czech/male/czech_male_english_open_swara_001.wav",
-    "hu": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/hungarian/male/hungarian_male_english_open_swara_001.wav",
-    "sk": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/slovak/male/slovak_male_english_open_swara_001.wav",
-    "sr": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/serbian/male/serbian_male_english_open_swara_001.wav",
-    "el": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/greek/male/greek_male_english_open_swara_001.wav",
-    "bg": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/bulgarian/male/bulgarian_male_english_open_swara_001.wav",
-    "is": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/icelandic/male/icelandic_male_english_open_swara_001.wav",
-    "da": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/danish/male/danish_male_english_open_swara_001.wav",
-    "sv": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/swedish/male/swedish_male_english_open_swara_001.wav",
-    "no": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/norwegian/male/norwegian_male_english_open_swara_001.wav",
-    "ko": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/korean/male/korean_male_english_open_swara_001.wav",
-    "id": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/indonesian/male/indonesian_male_english_open_swara_001.wav",
-    "ur": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/urdu/male/urdu_male_english_open_swara_001.wav",
-    "ne": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/nepali/male/nepali_male_english_open_swara_001.wav",
-    "ca": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/catalan/female/catalan_female_english_open_swara_001.wav"
+    # Open Swara (ekte morsmålstalere på Hugging Face - CC-BY-SA 4.0)
+    "ru": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/russian/male/russian_male_open_swara_001.wav",
+    "pl": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/polish/male/polish_male_open_swara_001.wav",
+    "it": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/italian/male/italian_male_open_swara_001.wav",
+    "nl": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/dutch/male/dutch_male_open_swara_001.wav",
+    "fi": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/finnish/male/finnish_male_open_swara_001.wav",
+    "hi": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/hindi/male/hindi_male_open_swara_001.wav",
+    "ko": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/korean/male/korean_male_open_swara_001.wav",
+    "da": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/danish/male/danish_male_open_swara_001.wav",
+    "sv": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/swedish/male/swedish_male_open_swara_001.wav",
+    "no": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/norwegian/male/norwegian_male_open_swara_001.wav",
+    "sw": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/swahili/male/swahili_male_open_swara_001.wav",
+    "ar": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/arabic/male/arabic_male_open_swara_001.wav",
+    "el": "https://huggingface.co/datasets/jaymunshi/open-swara/resolve/main/voices/greek/female/greek_female_open_swara_001.wav"
 }
 
 # --- FLERSPORS LYDOPPTAK (TALE + TOLK) ---
