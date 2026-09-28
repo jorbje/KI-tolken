@@ -59,5 +59,6 @@ Systemet er delt inn i tre hovedfiler:
     1. `audio-input` i RustDesk-konfigurasjonen (`RustDesk2.toml`) må ikke være låst til mikrofon/linjeinngang (f.eks. `Analogue 1 + 2 (Focusrite)`).
     2. Eksterne USB-lydkort (som Focusrite) støtter ofte ikke WASAPI Loopback capture i Windows, noe som gjør at RustDesk sender stillhet. Løsningen er å sette Windows standard avspillingsenhet til PC-ens interne `High Definition Audio Device (Headphones)`, som støtter WASAPI Loopback 100 %.
     3. Sjekk at høyttalerikonet i RustDesk-verktøylinjen øverst i skjermbildet hos klienten er slått på (ikke dempet).
+*   **Arkivert opptak forsvinner fra visning etter få sekunder:** Når man klikket "Åpne/Lytt" på et tidligere opptak i adminpanelet, forsvant avspilleren etter ca 2,5 sekunder. **LØSNING:** `setInterval`-funksjonen i `fetchRecordingStatus()` overskrev blindt den aktive visningen med serverens `last_recording` ved hvert oppkall. Lagt til state-variabler (`isViewingArchive` og `knownServerLastRecordingId`) for å sikre at arkiv-visningen holdes åpen inntil et nytt opptak faktisk startes eller fullføres.
 
 

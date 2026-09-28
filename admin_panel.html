@@ -2345,6 +2345,8 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
         let multitrackTimerInterval = null;
         let multitrackElapsedSeconds = 0;
         let isMultitrackRecording = false;
+        let knownServerLastRecordingId = null;
+        let isViewingArchive = false;
 
         function scrollToRecordingSection() {
             const sec = document.getElementById('multitrackRecordingSection');
@@ -2416,9 +2418,18 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
                 }
 
                 if (data.last_recording && !data.is_recording) {
-                    renderLastRecordingResult(data.last_recording);
-                } else if (!data.last_recording) {
-                    clearRecordingPreview();
+                    if (knownServerLastRecordingId !== data.last_recording.id) {
+                        knownServerLastRecordingId = data.last_recording.id;
+                        isViewingArchive = false;
+                        renderLastRecordingResult(data.last_recording);
+                    }
+                } else if (!data.last_recording && !data.is_recording) {
+                    if (knownServerLastRecordingId !== null) {
+                        knownServerLastRecordingId = null;
+                        if (!isViewingArchive) {
+                            clearRecordingPreview();
+                        }
+                    }
                 }
             } catch (e) {
                 console.error("Feil ved henting av opptaksstatus:", e);
@@ -2473,6 +2484,7 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
                 const stemsContainer = document.getElementById('recStemsList');
                 if (stemsContainer) stemsContainer.innerHTML = "";
                 currentLastRecordingId = null;
+                isViewingArchive = false;
             }
 
             // Sjekk om det slettede opptaket er lastet i lydavspilleren
@@ -2504,6 +2516,7 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
                 const data = await res.json();
                 if (res.ok && data.status === 'recording') {
                     clearRecordingPreview();
+                    isViewingArchive = false;
                     await fetchRecordingStatus();
                 } else {
                     alert("Kunne ikke starte opptak: " + (data.error || data.message || "Ukjent feil"));
@@ -2606,6 +2619,7 @@ VIKTIG: Du må KUN legge til det nye språket. Du skal IKKE røre, endre eller s
 
         function openArchivedRecording(rec) {
             if (!rec) return;
+            isViewingArchive = true;
             renderLastRecordingResult(rec);
             const sec = document.getElementById('recResultBox');
             if (sec) {
